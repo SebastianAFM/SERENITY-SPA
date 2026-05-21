@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spa Serenity</title>
+  <link rel="icon" href="img/logo.png">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- AOS Animaciones -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <link href="styles/styles.css" rel="stylesheet">
+
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-light shadow">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+        <img src="img/logo.png" alt="Logo" width="100" height="100" class="d-inline-block align-text-center">
+        Serenity Spa
+    </a>
+
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+        <li class="nav-item"><a class="nav-link" href="#galeria">Galería</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="overlay" data-aos="fade-up">
+    <h1>Relájate y Renueva tu Energía</h1>
+    <p>Bienestar, armonía y paz en un solo lugar</p>
+    <button 
+        class="btn btn-success btn-lg btn-reserva"
+        data-bs-toggle="modal"
+        data-bs-target="#modalReserva"
+      >
+        Reservar ahora
+      </button>
+  </div>
+</section>
+
+  <!-- MODAL RESERVA -->
+  <div class="modal fade" id="modalReserva" tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+      <div class="modal-content shadow-lg">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Bienvenido a Serenity SPA</h5>
+
+          <button 
+            type="button" 
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal">
+          </button>
+        </div>
+
+        <div class="modal-body text-center p-4">
+
+          <div class="icon-circle mb-4">
+            👤
+          </div>
+
+          <h4 class="mb-3">
+            Continúa con tu reserva
+          </h4>
+
+          <p class="text-muted mb-4">
+            Inicia sesión o crea una cuenta para reservar tu experiencia de relajación.
+          </p>
+
+          <div class="d-grid gap-3">
+
+            <a href="registro.html" class="btn btn-success btn-lg">
+              Crear una cuenta
+            </a>
+
+            <a href="login.html" class="btn btn-outline-primary btn-lg">
+              Ingresar a mi cuenta
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+<!-- Servicios -->
+<section id="servicios" class="container py-5">
+  <h2 class="text-center section-title" data-aos="fade-up">Servicios</h2>
+
+  <div class="row text-center">
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Masajes</h4>
+      <p>Terapias relajantes y descontracturantes.</p>
+    </div>
+
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Faciales</h4>
+      <p>Tratamientos rejuvenecedores.</p>
+    </div>
+
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Sauna</h4>
+      <p>Purificación total del cuerpo.</p>
+    </div>
+  </div>
+  <br>
+  <div class="row text-center">
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Pestañas</h4>
+      <p>pestañas pelo a pelo, resultado natural.</p>
+    </div>
+
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Exfoliación</h4>
+      <p>Piel suave e hidratada.</p>
+    </div>
+
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Fisioterapia</h4>
+      <p>Mejora de movilidad con tratamientos especializados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Galería -->
+<section id="galeria" class="container py-5">
+  <h2 class="text-center section-title">Galería</h2>
+
+  <div class="row gallery g-3">
+    <div class="col-md-4"><img src="img/foto_galeria_1.jpg"></div>
+    <div class="col-md-4"><img src="img/foto_galeria_2.jpg"></div>
+    <div class="col-md-4"><img src="img/foto_galeria_3.jpg"></div>
+  </div>
+</section>
+
+<!-- Contacto -->
+<section id="contacto" class="container py-5 text-center">
+  <h2 class="section-title">Contáctanos</h2>
+
+
+  <form onsubmit="enviarFormulario(event)" class="col-md-6 mx-auto">
+    <input type="text" class="form-control mb-2" placeholder="Nombre" required>
+    <input type="email" class="form-control mb-2" placeholder="Correo" required>
+    <textarea class="form-control mb-2" placeholder="Mensaje"></textarea>
+    <button class="btn btn-spa w-100">Enviar</button>
+  </form>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2026 Spa Serenity</p>
+</footer>
+
+<!-- Modal -->
+<div class="modal fade" id="reservaModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Reservar cita</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="reservar(event)">
+          <input type="text" class="form-control mb-2" placeholder="Nombre" required>
+          <input type="date" class="form-control mb-2" required>
+          <button class="btn btn-spa w-100">Confirmar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp -->
+<a href="https://wa.me/573001234567" target="_blank" class="whatsapp">
+  <i class="bi bi-whatsapp"></i>
+</a>
+
+<!-- Lightbox -->
+<div id="lightbox" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex justify-content-center align-items-center">
+  <img id="lightImg" class="img-fluid rounded">
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="scripts/database.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+<script>
+  AOS.init();
+
+  async function reservar(e){
+    e.preventDefault();
+    
+    const nombre = e.target.querySelector('input[type="text"]').value;
+    const fecha = e.target.querySelector('input[type="date"]').value;
+    
+    try {
+        const { data, error } = await supabase
+            .from('reservas')
+            .insert([
+                { 
+                    servicio: "General", // Podrías añadir un selector de servicios
+                    fecha: fecha,
+                    // usuario_id: ... // Aquí podrías obtener el ID si el usuario está logueado
+                }
+            ]);
+
+        if (error) {
+            console.error("Error al reservar:", error.message);
+            alert("Error al reservar: " + error.message);
+        } else {
+            alert("¡Reserva confirmada con éxito!");
+            bootstrap.Modal.getInstance(document.getElementById('reservaModal')).hide();
+            e.target.reset();
+        }
+    } catch (err) {
+        console.error("Error inesperado:", err);
+        alert("Ocurrió un error al procesar tu reserva.");
+    }
+  }
+
+  function enviarFormulario(e){
+    e.preventDefault();
+    alert("Mensaje enviado correctamente");
+  }
+
+  function openImg(img){
+    document.getElementById("lightbox").classList.remove("d-none");
+    document.getElementById("lightImg").src = img.src;
+  }
+
+  document.getElementById("lightbox").onclick = function(){
+    this.classList.add("d-none");
+  }
+</script>
+
+</body>
+</html>
+

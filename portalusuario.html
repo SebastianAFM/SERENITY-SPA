@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Portal Usuario</title>
+  <link rel="icon" href="img/logo.png">
+
+  <!-- BOOTSTRAP -->
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- ICONOS -->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="styles/portalusuario.css">
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+
+  <nav class="navbar navbar-expand-lg fixed-top">
+
+    <div class="container">
+
+      <a class="navbar-brand" href="#">
+        <img src="img/logo.png" alt="Logo" width="100" height="100" class="d-inline-block align-text-center">
+        Serenity Spa
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#menu">
+
+        <span class="navbar-toggler-icon"></span>
+
+      </button>
+
+      <div class="collapse navbar-collapse" id="menu">
+
+        <ul class="navbar-nav ms-auto">
+
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">Inicio</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#">Reservas</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="perfil.html">Perfil</a>
+          </li>
+
+        </ul>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="hero-card">
+
+      <h1>Portal de Reservas</h1>
+
+      <p>
+        Gestiona tus sesiones de relajación y bienestar
+        desde un solo lugar.
+      </p>
+
+    </div>
+
+  </section>
+
+  <!-- CONTENIDO -->
+
+  <div class="container my-5">
+
+    <!-- FORMULARIO -->
+
+    <div class="glass-card mb-5">
+
+      <h2 class="section-title">
+        <i class="bi bi-calendar2-check"></i>
+        Nueva Reserva
+      </h2>
+
+      <div class="row g-4">
+
+        <div class="col-md-6">
+
+          <label class="form-label">Nombre completo</label>
+
+          <input type="text"
+            id="nombre"
+            class="form-control form-control-lg">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="form-label">Servicio</label>
+
+          <select id="servicio"
+            class="form-select form-select-lg">
+
+            <option>Masaje relajante</option>
+            <option>Tratamiento facial</option>
+            <option>Sauna</option>
+            <option>Pestana</option>
+            <option>Exfoliacion</option>
+            <option>Fisioterapia</option>
+
+          </select>
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="form-label">Fecha</label>
+
+          <input type="date"
+            id="fecha"
+            class="form-control form-control-lg">
+
+        </div>
+
+        <div class="col-md-6">
+
+          <label class="form-label">Hora</label>
+
+          <input type="time"
+            id="hora"
+            class="form-control form-control-lg">
+
+        </div>
+
+      </div>
+
+      <button class="btn btn-spa mt-4"
+        onclick="crearReserva()">
+
+        <i class="bi bi-plus-circle"></i>
+        Reservar ahora
+
+      </button>
+
+    </div>
+
+    <!-- TABLA -->
+
+    <div class="glass-card">
+
+      <h2 class="section-title">
+
+        <i class="bi bi-journal-check"></i>
+        Mis Reservas
+
+      </h2>
+
+      <div class="table-responsive">
+
+        <table class="table align-middle">
+
+          <thead>
+
+            <tr>
+
+              <th>Cliente</th>
+              <th>Servicio</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="tablaReservas"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    © 2026 Serenity Spa | Todos los derechos reservados
+
+  </footer>
+
+  <!-- BOOTSTRAP JS -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="scripts/portalusuarios.js"></script>
+</body>
+
+</html>

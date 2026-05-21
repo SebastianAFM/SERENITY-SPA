@@ -1,0 +1,96 @@
+body {
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .hero {
+      background: url('/img/fondo.jpg') center/cover no-repeat;
+      height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+    }
+
+    .overlay {
+      background: rgba(0,0,0,0.5);
+      padding: 40px;
+      border-radius: 10px;
+    }
+
+    .btn-reserva {
+      background-color: #6c9a8b;
+      color: white;
+      transition: 0.3s;
+    }
+
+    .btn-reserva:hover {
+      background-color: #5a8577;
+      transform: scale(1.05);
+    }
+
+    .section-title {
+      color: #6c9a8b;
+      margin-bottom: 30px;
+    }
+
+    footer {
+      background-color: #6c9a8b;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+
+    /* Botón WhatsApp */
+    .whatsapp {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 30px;
+      background: #25D366;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50%;
+      z-index: 999;
+    }
+
+    /* Galería */
+    .gallery img {
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.05);
+    }
+
+    .icon-circle{
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #e8f5f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: auto;
+      font-size: 30px;
+      color: #4d8f7a;
+    }
+
+    .modal-content{
+      border-radius: 20px;
+      border: none;
+    }
+
+    .modal-header{
+      background: linear-gradient(135deg, #7bb8a4, #4d8f7a);
+      color: white;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+    }
+
+    
