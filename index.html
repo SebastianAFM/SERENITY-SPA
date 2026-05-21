@@ -221,16 +221,23 @@
     const nombre = e.target.querySelector('input[type="text"]').value;
     const fecha = e.target.querySelector('input[type="date"]').value;
     
+    const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioLogueado'));
+    const reservaData = { 
+        nombre: nombre,
+        servicio: "General",
+        fecha: fecha,
+        hora: "10:00", // Hora por defecto para citas rápidas de la landing
+        estado: "Confirmada"
+    };
+
+    if (usuarioLogueado) {
+        reservaData.usuario_id = usuarioLogueado.id;
+    }
+
     try {
         const { data, error } = await supabase
             .from('reservas')
-            .insert([
-                { 
-                    servicio: "General", // Podrías añadir un selector de servicios
-                    fecha: fecha,
-                    // usuario_id: ... // Aquí podrías obtener el ID si el usuario está logueado
-                }
-            ]);
+            .insert([reservaData]);
 
         if (error) {
             console.error("Error al reservar:", error.message);

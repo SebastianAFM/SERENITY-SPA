@@ -64,7 +64,8 @@ async function registrarUsuario(correo, password, nombre, apellido) {
                     nombre: nombre, 
                     apellido: apellido, 
                     correo: correo, 
-                    password: password // En producción, deberías hashear esto en el servidor
+                    password: password, // Nota: en producción esto debe estar cifrado
+                    rol: 'cliente' // Rol por defecto
                 }
             ]);
 
@@ -76,6 +77,10 @@ async function registrarUsuario(correo, password, nombre, apellido) {
             console.log("Usuario registrado con éxito");
             // Limpiar formulario
             form.reset();
+            // Redirigir al inicio de sesión tras 2 segundos
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 2000);
         }
     } catch (err) {
         console.error("Error inesperado:", err);

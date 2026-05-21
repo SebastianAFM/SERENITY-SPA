@@ -16,18 +16,39 @@
     )
 
     /* ========================================= */
+    /* VERIFICACIÓN DE SESIÓN */
+    /* ========================================= */
+
+    const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioLogueado'));
+
+    if (!usuarioLogueado) {
+      alert("Por favor, inicia sesión para acceder al portal.");
+      window.location.href = "login.html";
+    }
+
+    // Auto-completar nombre
+    document.addEventListener("DOMContentLoaded", () => {
+      const nombreInput = document.getElementById("nombre");
+      if (nombreInput && usuarioLogueado) {
+        nombreInput.value = usuarioLogueado.nombre + " " + usuarioLogueado.apellido;
+        nombreInput.disabled = true; // El nombre está bloqueado para el usuario logueado
+      }
+    });
+
+    /* ========================================= */
     /* CARGAR RESERVAS */
     /* ========================================= */
 
     async function cargarReservas() {
+      if (!usuarioLogueado) return;
 
       const { data, error } = await supabase
         .from('reservas')
         .select('*')
-        .order('id', { ascending: false })
+        .eq('usuario_id', usuarioLogueado.id)
+        .order('fecha', { ascending: false })
 
       if (error) {
-
         console.log(error)
         return
       }
@@ -70,7 +91,7 @@
 
               <button
                 class="btn-edit me-2"
-                onclick="reagendarReserva(${reserva.id})">
+                onclick="reagendarReserva('${reserva.id}')">
 
                 <i class="bi bi-pencil-square"></i>
 
@@ -78,7 +99,7 @@
 
               <button
                 class="btn-delete"
-                onclick="cancelarReserva(${reserva.id})">
+                onclick="cancelarReserva('${reserva.id}')">
 
                 <i class="bi bi-trash"></i>
 
@@ -97,9 +118,9 @@
     /* ========================================= */
 
     window.crearReserva = async function () {
+      if (!usuarioLogueado) return;
 
-      const nombre =
-        document.getElementById("nombre").value
+      const nombre = usuarioLogueado.nombre + " " + usuarioLogueado.apellido;
 
       const servicio =
         document.getElementById("servicio").value
@@ -111,7 +132,6 @@
         document.getElementById("hora").value
 
       if (
-        nombre === "" ||
         fecha === "" ||
         hora === ""
       ) {
@@ -123,6 +143,7 @@
       const { error } = await supabase
         .from('reservas')
         .insert([{
+          usuario_id: usuarioLogueado.id,
           nombre,
           servicio,
           fecha,
@@ -134,7 +155,7 @@
 
         console.log(error)
 
-        alert("Error al guardar")
+        alert("Error al guardar la reserva")
         return
       }
 
@@ -216,7 +237,6 @@
 
     function limpiarFormulario() {
 
-      document.getElementById("nombre").value = ""
       document.getElementById("fecha").value = ""
       document.getElementById("hora").value = ""
 

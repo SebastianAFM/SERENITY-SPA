@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Serenity Spa - Panel de Administración</title>
+  <link rel="icon" href="img/logo.png">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link href="styles/admin.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="img/logo.png" alt="Logo" width="45" height="45">
+      <h3>Serenity Spa</h3>
+    </div>
+    
+    <ul class="sidebar-menu">
+      <li class="active" id="menu-dashboard">
+        <a href="#" onclick="switchTab('dashboard')">
+          <i class="bi bi-grid-1x2-fill"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li id="menu-usuarios">
+        <a href="#" onclick="switchTab('usuarios')">
+          <i class="bi bi-people-fill"></i>
+          <span>Usuarios</span>
+        </a>
+      </li>
+      <li id="menu-reservas">
+        <a href="#" onclick="switchTab('reservas')">
+          <i class="bi bi-calendar-event-fill"></i>
+          <span>Reservas</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logoutAdmin()">
+        <i class="bi bi-box-arrow-left"></i>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
+    
+    <!-- HEADER -->
+    <header class="content-header">
+      <div>
+        <h1 class="fw-bold" id="page-title">Vista General</h1>
+        <p class="text-muted m-0">Bienvenido al portal de administración de Serenity Spa</p>
+      </div>
+
+      <div class="admin-profile">
+        <div class="admin-avatar" id="admin-avatar-initials">A</div>
+        <div class="admin-info">
+          <h5 id="admin-fullname">Administrador</h5>
+          <span class="badge bg-success">En línea</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================================================== -->
+    <!-- PESTAÑA: DASHBOARD (VISTA GENERAL) -->
+    <!-- ======================================================== -->
+    <section id="section-dashboard" class="dashboard-section active-section">
+      
+      <!-- GRID DE TARJETAS DE MÉTRICAS -->
+      <div class="metrics-grid">
+        <!-- Tarjeta Usuarios -->
+        <div class="metric-card">
+          <div class="metric-details">
+            <h6>Total Usuarios</h6>
+            <h3 id="stat-total-usuarios">0</h3>
+          </div>
+          <div class="metric-icon">
+            <i class="bi bi-people"></i>
+          </div>
+        </div>
+        <!-- Tarjeta Reservas -->
+        <div class="metric-card purple">
+          <div class="metric-details">
+            <h6>Total Reservas</h6>
+            <h3 id="stat-total-reservas">0</h3>
+          </div>
+          <div class="metric-icon">
+            <i class="bi bi-calendar2-check"></i>
+          </div>
+        </div>
+        <!-- Tarjeta Ingresos -->
+        <div class="metric-card blue">
+          <div class="metric-details">
+            <h6>Ganancias Est.</h6>
+            <h3 id="stat-ganancias">$0</h3>
+          </div>
+          <div class="metric-icon">
+            <i class="bi bi-currency-dollar"></i>
+          </div>
+        </div>
+        <!-- Tarjeta Asistencia -->
+        <div class="metric-card orange">
+          <div class="metric-details">
+            <h6>Asistencia Citas</h6>
+            <h3 id="stat-asistencia">0%</h3>
+          </div>
+          <div class="metric-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN DE GRÁFICOS Y ACTIVIDAD -->
+      <div class="dashboard-row">
+        <!-- Gráfico de Servicios -->
+        <div class="glass-card">
+          <div class="card-title-area">
+            <h4><i class="bi bi-pie-chart-fill"></i> Popularidad de Servicios</h4>
+          </div>
+          <div style="position: relative; height: 300px; display: flex; justify-content: center;">
+            <canvas id="chart-servicios"></canvas>
+          </div>
+        </div>
+
+        <!-- Registro de Actividad Reciente -->
+        <div class="glass-card">
+          <div class="card-title-area">
+            <h4><i class="bi bi-activity"></i> Actividad Reciente</h4>
+          </div>
+          <div class="activity-stream" id="recent-activity-container">
+            <!-- Cargado dinámicamente -->
+            <div class="text-center text-muted py-4">Iniciando bitácora...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA DE RESERVAS RECIENTES -->
+      <div class="glass-card">
+        <div class="card-title-area">
+          <h4><i class="bi bi-clock-history"></i> Reservas Recientes</h4>
+          <button class="btn btn-sm btn-outline-success border-0 fw-bold" onclick="switchTab('reservas')">Ver todas →</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table custom-table align-middle">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-reservas-recientes">
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">Cargando reservas recientes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- PESTAÑA: USUARIOS -->
+    <!-- ======================================================== -->
+    <section id="section-usuarios" class="dashboard-section">
+      <div class="glass-card">
+        <div class="table-filter-area">
+          <div class="search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="buscar-usuario" class="form-control" placeholder="Buscar usuario por nombre o correo..." oninput="filtrarUsuarios()">
+          </div>
+          <div>
+            <select id="filtro-rol-usuario" class="filter-select" onchange="filtrarUsuarios()">
+              <option value="todos">Todos los Roles</option>
+              <option value="admin">Administradores</option>
+              <option value="cliente">Clientes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table custom-table align-middle">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Correo Electrónico</th>
+                <th>Rol</th>
+                <th>Fecha de Registro</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-usuarios">
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">Cargando lista de usuarios...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- PESTAÑA: RESERVAS -->
+    <!-- ======================================================== -->
+    <section id="section-reservas" class="dashboard-section">
+      <div class="glass-card">
+        <div class="table-filter-area">
+          <div class="search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="buscar-reserva" class="form-control" placeholder="Buscar por cliente o servicio..." oninput="filtrarReservas()">
+          </div>
+          <div class="d-flex gap-3">
+            <select id="filtro-estado-reserva" class="filter-select" onchange="filtrarReservas()">
+              <option value="todos">Todos los Estados</option>
+              <option value="Confirmada">Confirmadas</option>
+              <option value="Pendiente">Pendientes</option>
+              <option value="Cancelada">Canceladas</option>
+              <option value="Completada">Completadas</option>
+            </select>
+            
+            <button class="btn btn-success d-flex align-items-center gap-2 rounded-3" data-bs-toggle="modal" data-bs-target="#modalCrearReservaAdmin">
+              <i class="bi bi-plus-circle-fill"></i> Nueva Reserva
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table custom-table align-middle">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-reservas">
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Cargando listado de reservas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODALES -->
+<!-- ======================================================== -->
+
+<!-- Modal: Editar Rol de Usuario -->
+<div class="modal fade" id="modalEditarRol" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill"></i> Administrar Rol de Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-rol-userid">
+        <p class="mb-4">Modifica el nivel de acceso del siguiente usuario:</p>
+        
+        <div class="p-3 bg-light rounded-3 mb-4 border border-1">
+          <div class="d-flex align-items-center gap-3">
+            <div class="admin-avatar fw-bold" id="modal-rol-avatar">U</div>
+            <div>
+              <h6 class="m-0 fw-bold" id="modal-rol-username">Nombre Usuario</h6>
+              <small class="text-muted" id="modal-rol-useremail">correo@correo.com</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Asignar Rol</label>
+          <select id="modal-rol-select" class="form-select form-select-lg rounded-3">
+            <option value="cliente">Cliente (Acceso básico al portal de citas)</option>
+            <option value="admin">Administrador (Acceso completo al panel administrativo)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-success px-4 rounded-3" onclick="guardarRolUsuario()">Actualizar Rol</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reagendar / Editar Reserva -->
+<div class="modal fade" id="modalEditarReserva" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-check-fill"></i> Reagendar / Editar Cita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-reserva-id">
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Cliente</label>
+          <input type="text" id="modal-reserva-cliente" class="form-control rounded-3" disabled>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Servicio</label>
+          <select id="modal-reserva-servicio" class="form-select rounded-3">
+            <option>Masaje relajante</option>
+            <option>Tratamiento facial</option>
+            <option>Sauna</option>
+            <option>Pestana</option>
+            <option>Exfoliacion</option>
+            <option>Fisioterapia</option>
+          </select>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha</label>
+            <input type="date" id="modal-reserva-fecha" class="form-control rounded-3">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Hora</label>
+            <input type="time" id="modal-reserva-hora" class="form-control rounded-3">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Estado de la Cita</label>
+          <select id="modal-reserva-estado" class="form-select rounded-3">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Confirmada">Confirmada</option>
+            <option value="Completada">Completada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-success px-4 rounded-3" onclick="guardarEdicionReserva()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Crear Reserva Administrativa -->
+<div class="modal fade" id="modalCrearReservaAdmin" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus-fill"></i> Crear Nueva Cita (Admin)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Vincular a Usuario Registrado</label>
+          <select id="modal-crear-usuario-id" class="form-select rounded-3" onchange="autoCompletarNombreCrear()">
+            <option value="">-- Cita de Invitado (Sin Cuenta) --</option>
+            <!-- Cargados dinámicamente -->
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nombre del Cliente</label>
+          <input type="text" id="modal-crear-nombre" class="form-control rounded-3" placeholder="Ingresa nombre del cliente..." required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Servicio</label>
+          <select id="modal-crear-servicio" class="form-select rounded-3">
+            <option>Masaje relajante</option>
+            <option>Tratamiento facial</option>
+            <option>Sauna</option>
+            <option>Pestana</option>
+            <option>Exfoliacion</option>
+            <option>Fisioterapia</option>
+          </select>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha</label>
+            <input type="date" id="modal-crear-fecha" class="form-control rounded-3" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Hora</label>
+            <input type="time" id="modal-crear-hora" class="form-control rounded-3" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success px-4 rounded-3" onclick="guardarNuevaReservaAdmin()">Crear Cita</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Database Base Config -->
+<script src="scripts/database.js"></script>
+<!-- Admin Script -->
+<script src="scripts/adminscript.js"></script>
+
+</body>
+</html>
