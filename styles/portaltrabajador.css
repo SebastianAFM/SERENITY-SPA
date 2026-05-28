@@ -1,0 +1,46 @@
+.badge-status {
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .badge-status.pendiente {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .badge-status.confirmada {
+      background: #d1f0e5;
+      color: #198754;
+    }
+    .badge-status.completada {
+      background: #cfe2ff;
+      color: #084298;
+    }
+    .badge-status.cancelada {
+      background: #f8d7da;
+      color: #842029;
+    }
+    .btn-action-status {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .btn-action-status.btn-complete {
+      background: #198754;
+      color: white;
+    }
+    .btn-action-status.btn-complete:hover {
+      background: #157347;
+      transform: translateY(-1px);
+    }
+    .btn-action-status.btn-cancel {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-action-status.btn-cancel:hover {
+      background: #bb2d3b;
+      transform: translateY(-1px);
+    }

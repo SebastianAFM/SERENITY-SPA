@@ -27,7 +27,7 @@
 
     <div class="container">
 
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="index.html">
         <img src="img/logo.png" alt="Logo" width="100" height="100" class="d-inline-block align-text-center">
         Serenity Spa
       </a>
@@ -44,15 +44,19 @@
         <ul class="navbar-nav ms-auto">
 
           <li class="nav-item">
-            <a class="nav-link" href="index.html">Inicio</a>
+            <a class="nav-link" href="index.html"><i class="bi bi-house-door-fill me-1"></i>Inicio</a>
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="#">Reservas</a>
+            <a class="nav-link fw-bold" href="#" id="navReservas" onclick="switchUserTab('reservas')" style="color: #4f8f7b !important; border-bottom: 2px solid #4f8f7b;"><i class="bi bi-calendar-event me-1"></i>Reservas</a>
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="perfil.html">Perfil</a>
+            <a class="nav-link" href="#" id="navTienda" onclick="switchUserTab('tienda')"><i class="bi bi-bag-heart me-1"></i>Tienda Online</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="logoutUsuario()"><i class="bi bi-box-arrow-right me-1"></i>Salir</a>
           </li>
 
         </ul>
@@ -84,115 +88,306 @@
 
   <div class="container my-5">
 
-    <!-- FORMULARIO -->
+    <!-- SECCIÓN DE RESERVAS -->
+    <div id="tabContentReservas">
+      <!-- FORMULARIO -->
 
-    <div class="glass-card mb-5">
+      <div class="glass-card mb-5">
 
-      <h2 class="section-title">
-        <i class="bi bi-calendar2-check"></i>
-        Nueva Reserva
-      </h2>
+        <h2 class="section-title">
+          <i class="bi bi-calendar2-check"></i>
+          Nueva Reserva
+        </h2>
 
-      <div class="row g-4">
+        <div class="row g-4">
 
-        <div class="col-md-6">
+          <div class="col-md-6">
 
-          <label class="form-label">Nombre completo</label>
+            <label class="form-label">Nombre completo</label>
 
-          <input type="text"
-            id="nombre"
-            class="form-control form-control-lg">
+            <input type="text"
+              id="nombre"
+              class="form-control form-control-lg">
+
+          </div>
+
+          <div class="col-md-6">
+
+            <label class="form-label">Servicio</label>
+
+            <select id="servicio"
+              class="form-select form-select-lg">
+
+              <option>Masaje relajante</option>
+              <option>Tratamiento facial</option>
+              <option>Sauna</option>
+              <option>Pestana</option>
+              <option>Exfoliacion</option>
+              <option>Fisioterapia</option>
+
+            </select>
+
+          </div>
+
+          <div class="col-md-6">
+
+            <label class="form-label">Terapeuta / Trabajador</label>
+
+            <select id="trabajador"
+              class="form-select form-select-lg">
+
+              <option value="Cualquiera">Cualquiera (Asignación automática)</option>
+              <option value="Carlos Ruiz">Carlos Ruiz (Fisioterapia)</option>
+              <option value="Laura Gómez">Laura Gómez (Masajista)</option>
+              <option value="Sofía Marín">Sofía Marín (Cosmiatra)</option>
+
+            </select>
+
+          </div>
+
+          <div class="col-md-6">
+
+            <label class="form-label">Fecha</label>
+
+            <input type="date"
+              id="fecha"
+              class="form-control form-control-lg">
+
+          </div>
+
+          <div class="col-md-6">
+
+            <label class="form-label">Hora</label>
+
+            <input type="time"
+              id="hora"
+              class="form-control form-control-lg">
+
+          </div>
 
         </div>
 
-        <div class="col-md-6">
+        <button class="btn btn-spa mt-4"
+          onclick="crearReserva()">
 
-          <label class="form-label">Servicio</label>
+          <i class="bi bi-plus-circle"></i>
+          Reservar ahora
 
-          <select id="servicio"
-            class="form-select form-select-lg">
+        </button>
 
-            <option>Masaje relajante</option>
-            <option>Tratamiento facial</option>
-            <option>Sauna</option>
-            <option>Pestana</option>
-            <option>Exfoliacion</option>
-            <option>Fisioterapia</option>
+      </div>
 
-          </select>
+      <!-- TABLA -->
 
-        </div>
+      <div class="glass-card">
 
-        <div class="col-md-6">
+        <h2 class="section-title">
 
-          <label class="form-label">Fecha</label>
+          <i class="bi bi-journal-check"></i>
+          Mis Reservas
 
-          <input type="date"
-            id="fecha"
-            class="form-control form-control-lg">
+        </h2>
 
-        </div>
+        <div class="table-responsive">
 
-        <div class="col-md-6">
+          <table class="table align-middle">
 
-          <label class="form-label">Hora</label>
+            <thead>
 
-          <input type="time"
-            id="hora"
-            class="form-control form-control-lg">
+              <tr>
+
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Terapeuta</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="tablaReservas"></tbody>
+
+          </table>
 
         </div>
 
       </div>
-
-      <button class="btn btn-spa mt-4"
-        onclick="crearReserva()">
-
-        <i class="bi bi-plus-circle"></i>
-        Reservar ahora
-
-      </button>
-
     </div>
 
-    <!-- TABLA -->
+    <!-- SECCIÓN DE TIENDA ONLINE -->
+    <div id="tabContentTienda" style="display: none;">
+      <div class="glass-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+          <div>
+            <h2 class="section-title m-0">
+              <i class="bi bi-bag-heart-fill"></i>
+              Tienda Serenity
+            </h2>
+            <p class="text-muted mt-2 mb-0">Productos de bienestar y spa de calidad profesional para el cuidado de tu cuerpo.</p>
+          </div>
+          <button class="btn btn-spa d-flex align-items-center gap-2 px-4 shadow-sm" onclick="abrirCarrito()">
+            <i class="bi bi-cart3"></i>
+            Ver Carrito
+            <span class="badge bg-white text-dark rounded-circle" id="cartCount" style="padding: 4px 8px; font-size: 13px;">0</span>
+          </button>
+        </div>
 
-    <div class="glass-card">
+        <!-- Catálogo Grid -->
+        <div class="row g-4" id="catalogoProductos">
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Aceite Esencial de Lavanda" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Aceite Esencial Lavanda</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">100% puro y natural. Ideal para relajación y aromaterapia profunda antes de dormir.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$35.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod1', 'Aceite Esencial Lavanda', 35000, 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <h2 class="section-title">
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Exfoliante de Coco & Miel" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Exfoliante Coco & Miel</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Remueve células muertas dejando una piel extremadamente suave, hidratada y con aroma tropical.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$45.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod2', 'Exfoliante Coco & Miel', 45000, 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <i class="bi bi-journal-check"></i>
-        Mis Reservas
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1567894192231-d22d9c1349b0?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Mascarilla de Arcilla Verde" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Arcilla Verde Facial</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Desintoxicación y limpieza profunda de poros. Elimina impurezas y regula la grasitud facial.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$38.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod3', 'Arcilla Verde Facial', 38000, 'https://images.unsplash.com/photo-1567894192231-d22d9c1349b0?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      </h2>
+          <div class="col-md-4 mt-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Kit de Piedras Volcánicas" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Kit Piedras Volcánicas</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Piedras basálticas pulidas de río. Excelente para masajes térmicos relajantes en casa.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$85.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod4', 'Kit Piedras Volcánicas', 85000, 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div class="table-responsive">
+          <div class="col-md-4 mt-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Vela Aromática de Jazmín" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Vela Aromática Jazmín</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Cera de soya natural. Crea un ambiente armónico y pacífico con notas florales sutiles.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$28.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod5', 'Vela Aromática Jazmín', 28000, 'https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <table class="table align-middle">
-
-          <thead>
-
-            <tr>
-
-              <th>Cliente</th>
-              <th>Servicio</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody id="tablaReservas"></tbody>
-
-        </table>
-
+          <div class="col-md-4 mt-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="Crema Regeneradora Facial" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">Crema Regeneradora</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Tratamiento antienvejecimiento de noche con ácido hialurónico y extractos botánicos premium.</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="fw-bold fs-5 text-success">$65.000 COP</span>
+                  <button class="btn btn-spa py-2 px-3 btn-sm" onclick="agregarAlCarrito('prod6', 'Crema Regeneradora', 65000, 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
     </div>
 
+  </div>
+
+  <!-- Modal Carrito de Compras -->
+  <div class="modal fade" id="carritoModal" tabindex="-1" aria-labelledby="carritoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+        <div class="modal-header border-0 pb-0 shadow-sm" style="padding: 25px 25px 15px;">
+          <h5 class="modal-title fw-bold" id="carritoModalLabel" style="color: #4f8f7b;">
+            <i class="bi bi-cart3 me-2"></i>Tu Carrito de Compras
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body px-4 py-4" style="min-height: 200px;">
+          <!-- Lista de Items en Carrito -->
+          <div id="carritoVacio" class="text-center py-5">
+            <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
+            <h5 class="text-muted mt-3">Tu carrito está vacío</h5>
+            <p class="text-muted" style="font-size: 14px;">¡Explora nuestros productos de bienestar y agrega algo especial para ti!</p>
+          </div>
+          
+          <div id="carritoLleno" style="display: none;">
+            <div class="table-responsive">
+              <table class="table align-middle table-borderless">
+                <thead>
+                  <tr class="text-muted" style="font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <th scope="col" style="background: transparent; color: #555;">Producto</th>
+                    <th scope="col" style="background: transparent; color: #555;" class="text-center">Cantidad</th>
+                    <th scope="col" style="background: transparent; color: #555;" class="text-end">Precio</th>
+                    <th scope="col" style="background: transparent; color: #555;" class="text-end">Subtotal</th>
+                    <th scope="col" style="background: transparent; color: #555;" class="text-center">Eliminar</th>
+                  </tr>
+                </thead>
+                <tbody id="itemsCarrito">
+                  <!-- Renderizado dinámico -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style="border-top: 1px solid rgba(0,0,0,0.05) !important;">
+              <span class="fs-5 text-muted fw-semibold">Total a pagar:</span>
+              <span class="fs-4 text-success fw-bold" id="totalCarrito">$0 COP</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0" style="padding: 15px 25px 25px;">
+          <div class="d-flex w-100 gap-3">
+            <button type="button" class="btn btn-outline-secondary w-50 py-3 rounded-3 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px !important;">Seguir Comprando</button>
+            <button type="button" class="btn btn-spa w-50 py-3 rounded-3 fw-bold" id="btnPagarCarrito" onclick="finalizarCompra()" style="border-radius: 12px !important;">Finalizar Compra</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER -->

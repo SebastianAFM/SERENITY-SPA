@@ -85,6 +85,8 @@ async function iniciarSesion(correo, password) {
     setTimeout(() => {
       if (data.rol === 'admin') {
         window.location.href = "admin.html";
+      } else if (data.rol === 'trabajador') {
+        window.location.href = "portaltrabajador.html";
       } else {
         window.location.href = "portalusuario.html";
       }

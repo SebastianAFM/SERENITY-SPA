@@ -368,7 +368,7 @@ window.renderTablaReservas = function(filtradas = null) {
   const lista = filtradas || bookingsData;
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron reservas.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron reservas.</td></tr>`;
     return;
   }
 
@@ -378,11 +378,12 @@ window.renderTablaReservas = function(filtradas = null) {
     tr.innerHTML = `
       <td><strong>${b.nombre}</strong></td>
       <td>${b.servicio}</td>
+      <td class="fw-semibold text-muted" style="font-size: 14px;"><i class="bi bi-person-badge text-success me-1"></i>${b.trabajador || 'Cualquiera'}</td>
       <td>${b.fecha}</td>
       <td>${b.hora}</td>
       <td><span class="badge-status ${b.estado.toLowerCase()}">${b.estado}</span></td>
       <td class="text-center">
-        <button class="btn-action-edit me-2" onclick="abrirModalEditarReserva('${b.id}', '${b.nombre}', '${b.servicio}', '${b.fecha}', '${b.hora}', '${b.estado}')" title="Reagendar / Editar">
+        <button class="btn-action-edit me-2" onclick="abrirModalEditarReserva('${b.id}', '${b.nombre}', '${b.servicio}', '${b.fecha}', '${b.hora}', '${b.estado}', '${b.trabajador || 'Cualquiera'}')" title="Reagendar / Editar">
           <i class="bi bi-pencil-square"></i>
         </button>
         <button class="btn-action-delete" onclick="eliminarReserva('${b.id}')" title="Eliminar Reserva">
@@ -400,7 +401,8 @@ window.filtrarReservas = function() {
 
   const filtradas = bookingsData.filter(b => {
     const coincideBusqueda = b.nombre.toLowerCase().includes(query) || 
-                              b.servicio.toLowerCase().includes(query);
+                              b.servicio.toLowerCase().includes(query) ||
+                              (b.trabajador && b.trabajador.toLowerCase().includes(query));
     const coincideEstado = filtroEstado === 'todos' || b.estado === filtroEstado;
 
     return coincideBusqueda && coincideEstado;
@@ -410,10 +412,11 @@ window.filtrarReservas = function() {
 }
 
 // Abrir Modal Editar Reserva
-window.abrirModalEditarReserva = function(id, cliente, servicio, fecha, hora, estado) {
+window.abrirModalEditarReserva = function(id, cliente, servicio, fecha, hora, estado, trabajador) {
   document.getElementById("modal-reserva-id").value = id;
   document.getElementById("modal-reserva-cliente").value = cliente;
   document.getElementById("modal-reserva-servicio").value = servicio;
+  document.getElementById("modal-reserva-trabajador").value = trabajador || 'Cualquiera';
   document.getElementById("modal-reserva-fecha").value = fecha;
   document.getElementById("modal-reserva-hora").value = hora;
   document.getElementById("modal-reserva-estado").value = estado;
@@ -426,6 +429,7 @@ window.abrirModalEditarReserva = function(id, cliente, servicio, fecha, hora, es
 window.guardarEdicionReserva = async function() {
   const id = document.getElementById("modal-reserva-id").value;
   const servicio = document.getElementById("modal-reserva-servicio").value;
+  const trabajador = document.getElementById("modal-reserva-trabajador").value;
   const fecha = document.getElementById("modal-reserva-fecha").value;
   const hora = document.getElementById("modal-reserva-hora").value;
   const estado = document.getElementById("modal-reserva-estado").value;
@@ -433,7 +437,7 @@ window.guardarEdicionReserva = async function() {
   try {
     const { error } = await supabase
       .from('reservas')
-      .update({ servicio, fecha, hora, estado })
+      .update({ servicio, trabajador, fecha, hora, estado })
       .eq('id', id);
 
     if (error) throw error;
@@ -502,6 +506,7 @@ window.guardarNuevaReservaAdmin = async function() {
   const usuarioId = document.getElementById("modal-crear-usuario-id").value;
   const nombre = document.getElementById("modal-crear-nombre").value;
   const servicio = document.getElementById("modal-crear-servicio").value;
+  const trabajador = document.getElementById("modal-crear-trabajador").value;
   const fecha = document.getElementById("modal-crear-fecha").value;
   const hora = document.getElementById("modal-crear-hora").value;
 
@@ -517,6 +522,7 @@ window.guardarNuevaReservaAdmin = async function() {
         usuario_id: usuarioId || null,
         nombre: nombre,
         servicio: servicio,
+        trabajador: trabajador,
         fecha: fecha,
         hora: hora,
         estado: 'Confirmada'
@@ -530,6 +536,7 @@ window.guardarNuevaReservaAdmin = async function() {
     document.getElementById("modal-crear-usuario-id").value = "";
     document.getElementById("modal-crear-nombre").value = "";
     document.getElementById("modal-crear-nombre").disabled = false;
+    document.getElementById("modal-crear-trabajador").value = "Cualquiera";
     document.getElementById("modal-crear-fecha").value = "";
     document.getElementById("modal-crear-hora").value = "";
     bootstrap.Modal.getInstance(document.getElementById('modalCrearReservaAdmin')).hide();

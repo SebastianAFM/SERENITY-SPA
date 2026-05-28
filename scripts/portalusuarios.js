@@ -36,6 +36,151 @@
     });
 
     /* ========================================= */
+    /* LOGOUT Y NAVEGACIÓN DE PESTAÑAS */
+    /* ========================================= */
+    window.logoutUsuario = function() {
+      if (confirm("¿Seguro que deseas cerrar sesión?")) {
+        localStorage.removeItem('usuarioLogueado');
+        window.location.href = "login.html";
+      }
+    };
+
+    window.switchUserTab = function(tab) {
+      const tabReservas = document.getElementById("tabContentReservas");
+      const tabTienda = document.getElementById("tabContentTienda");
+      const navReservas = document.getElementById("navReservas");
+      const navTienda = document.getElementById("navTienda");
+
+      if (tab === 'reservas') {
+        tabReservas.style.display = 'block';
+        tabTienda.style.display = 'none';
+        navReservas.classList.add('fw-bold');
+        navReservas.style.color = '#4f8f7b';
+        navReservas.style.borderBottom = '2px solid #4f8f7b';
+        navTienda.classList.remove('fw-bold');
+        navTienda.style.color = '#555';
+        navTienda.style.borderBottom = 'none';
+      } else {
+        tabReservas.style.display = 'none';
+        tabTienda.style.display = 'block';
+        navTienda.classList.add('fw-bold');
+        navTienda.style.color = '#4f8f7b';
+        navTienda.style.borderBottom = '2px solid #4f8f7b';
+        navReservas.classList.remove('fw-bold');
+        navReservas.style.color = '#555';
+        navReservas.style.borderBottom = 'none';
+      }
+    };
+
+    /* ========================================= */
+    /* LÓGICA DEL CARRITO DE COMPRAS (TIENDA) */
+    /* ========================================= */
+    let carrito = [];
+
+    window.agregarAlCarrito = function(id, nombre, precio, imagen) {
+      const itemExistente = carrito.find(item => item.id === id);
+      if (itemExistente) {
+        itemExistente.cantidad++;
+      } else {
+        carrito.push({ id, nombre, precio, imagen, cantidad: 1 });
+      }
+      actualizarContadorCarrito();
+      alert(`¡${nombre} añadido al carrito! 🛍️`);
+    };
+
+    function actualizarContadorCarrito() {
+      const count = carrito.reduce((total, item) => total + item.cantidad, 0);
+      document.getElementById("cartCount").innerText = count;
+    }
+
+    window.abrirCarrito = function() {
+      const modal = new bootstrap.Modal(document.getElementById('carritoModal'));
+      renderCarrito();
+      modal.show();
+    };
+
+    function renderCarrito() {
+      const vacio = document.getElementById("carritoVacio");
+      const lleno = document.getElementById("carritoLleno");
+      const itemsContainer = document.getElementById("itemsCarrito");
+      const totalContainer = document.getElementById("totalCarrito");
+
+      if (carrito.length === 0) {
+        vacio.style.display = 'block';
+        lleno.style.display = 'none';
+        return;
+      }
+
+      vacio.style.display = 'none';
+      lleno.style.display = 'block';
+      itemsContainer.innerHTML = '';
+
+      let total = 0;
+      carrito.forEach(item => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        itemsContainer.innerHTML += `
+          <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <img src="${item.imagen}" alt="${item.nombre}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                <span class="fw-bold text-dark" style="font-size: 15px;">${item.nombre}</span>
+              </div>
+            </td>
+            <td class="text-center">
+              <div class="d-inline-flex align-items-center gap-2 border rounded-3 p-1">
+                <button class="btn btn-sm btn-light p-1 border-0" onclick="cambiarCantidad('${item.id}', -1)" style="font-size: 11px; width: 22px; height: 22px; line-height: 1;"><i class="bi bi-dash"></i></button>
+                <span class="fw-bold px-1" style="font-size: 14px;">${item.cantidad}</span>
+                <button class="btn btn-sm btn-light p-1 border-0" onclick="cambiarCantidad('${item.id}', 1)" style="font-size: 11px; width: 22px; height: 22px; line-height: 1;"><i class="bi bi-plus"></i></button>
+              </div>
+            </td>
+            <td class="text-end fw-semibold text-muted">$${item.precio.toLocaleString('es-CO')}</td>
+            <td class="text-end fw-bold text-success">$${subtotal.toLocaleString('es-CO')}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-link text-danger border-0 p-0 fs-5" onclick="eliminarDelCarrito('${item.id}')">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      totalContainer.innerText = `$${total.toLocaleString('es-CO')} COP`;
+    }
+
+    window.cambiarCantidad = function(id, delta) {
+      const item = carrito.find(item => item.id === id);
+      if (item) {
+        item.cantidad += delta;
+        if (item.cantidad <= 0) {
+          carrito = carrito.filter(item => item.id !== id);
+        }
+      }
+      actualizarContadorCarrito();
+      renderCarrito();
+    };
+
+    window.eliminarDelCarrito = function(id) {
+      carrito = carrito.filter(item => item.id !== id);
+      actualizarContadorCarrito();
+      renderCarrito();
+    };
+
+    window.finalizarCompra = function() {
+      // Simular compra exitosa con una animación premium y limpia
+      bootstrap.Modal.getInstance(document.getElementById('carritoModal')).hide();
+      
+      alert("¡Procesando tu pago seguro Serenity Pay... 💳✨!");
+      
+      setTimeout(() => {
+        alert("¡Compra exitosa! 🎉\n\nHemos registrado tu pedido en Serenity Spa. Te enviaremos un correo de confirmación con los detalles del envío.");
+        carrito = [];
+        actualizarContadorCarrito();
+      }, 1500);
+    };
+
+    /* ========================================= */
     /* CARGAR RESERVAS */
     /* ========================================= */
 
@@ -76,6 +221,8 @@
             <td>${reserva.nombre}</td>
 
             <td>${reserva.servicio}</td>
+
+            <td><span class="text-muted fw-semibold" style="font-size: 14px;"><i class="bi bi-person-badge text-success me-1"></i>${reserva.trabajador || 'Cualquiera'}</span></td>
 
             <td>${reserva.fecha}</td>
 
@@ -125,6 +272,9 @@
       const servicio =
         document.getElementById("servicio").value
 
+      const trabajador =
+        document.getElementById("trabajador").value
+
       const fecha =
         document.getElementById("fecha").value
 
@@ -146,6 +296,7 @@
           usuario_id: usuarioLogueado.id,
           nombre,
           servicio,
+          trabajador,
           fecha,
           hora,
           estado: 'Confirmada'
@@ -155,7 +306,7 @@
 
         console.log(error)
 
-        alert("Error al guardar la reserva")
+        alert("Error al guardar la reserva: " + error.message)
         return
       }
 

@@ -13,15 +13,24 @@ const form = document.getElementById("registroForm");
       const correoError = document.getElementById("correoError");
       const passwordError = document.getElementById("passwordError");
       const confirmError = document.getElementById("confirmError");
+      const terminosError = document.getElementById("terminosError");
       const successMessage = document.getElementById("successMessage");
+      const terminos = document.getElementById("terminos");
 
       // Reset
       correoError.style.display = "none";
       passwordError.style.display = "none";
       confirmError.style.display = "none";
+      terminosError.style.display = "none";
       successMessage.style.display = "none";
 
       let valido = true;
+
+      // Validación términos y condiciones
+      if(!terminos.checked){
+        terminosError.style.display = "block";
+        valido = false;
+      }
 
       // Validación correo
       const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

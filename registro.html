@@ -163,10 +163,21 @@
           </div>
         </div>
 
-        <!-- Botón -->
-        <button type="submit" class="btn-register">
-          Crear Cuenta
-        </button>
+        <!-- Términos y Condiciones -->
+        <div class="form-check mb-4 text-start d-flex align-items-center gap-2">
+          <input class="form-check-input mt-0" type="checkbox" id="terminos" required style="cursor: pointer; accent-color: #4f8f7b;">
+          <label class="form-check-label text-muted" for="terminos" style="font-size: 14px; cursor: pointer;">
+            Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#terminosModal" style="color: #4f8f7b; text-decoration: underline; font-weight: 500;">términos y condiciones</a> de uso
+          </label>
+        </div>
+        <div class="error" id="terminosError" style="margin-top: -10px; margin-bottom: 15px;">
+          Debes aceptar los términos y condiciones para registrarte
+        </div>
+ 
+         <!-- Botón -->
+         <button type="submit" class="btn-register">
+           Crear Cuenta
+         </button>
 
         <div class="success mt-3" id="successMessage">
           Registro exitoso 🎉
@@ -186,10 +197,43 @@
   </div>
   <br><br>
 
+<!-- Modal de Términos y Condiciones -->
+<div class="modal fade" id="terminosModal" tabindex="-1" aria-labelledby="terminosModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+      <div class="modal-header border-0 pb-0" style="padding: 25px 25px 10px;">
+        <h5 class="modal-title fw-bold" id="terminosModalLabel" style="color: #4f8f7b;">Términos y Condiciones de Uso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start px-4" style="font-size: 15px; line-height: 1.6; color: #555;">
+        <p>Bienvenido a <strong>Serenity Spa</strong>. Al registrarte y utilizar nuestra plataforma de reservas y tienda online, aceptas cumplir y estar sujeto a las siguientes condiciones:</p>
+        
+        <h6 class="fw-bold mt-3" style="color: #3e7262;">1. Registro y Seguridad de la Cuenta</h6>
+        <p>Al crear una cuenta, te comprometes a proporcionar información verídica y a mantener la confidencialidad de tu contraseña. Eres responsable de toda actividad que ocurra bajo tu usuario.</p>
+        
+        <h6 class="fw-bold mt-3" style="color: #3e7262;">2. Reservas y Cancelaciones</h6>
+        <p>Las reservas están sujetas a disponibilidad del personal y del servicio seleccionado. En caso de requerir cancelación o reagendamiento, te sugerimos hacerlo con al menos 24 horas de anticipación a través de tu portal de usuario.</p>
+        
+        <h6 class="fw-bold mt-3" style="color: #3e7262;">3. Tienda Online y Compras</h6>
+        <p>Las compras realizadas en nuestra tienda en línea corresponden a tratamientos premium y productos de cuidado personal. Nos comprometemos a entregar productos de la más alta calidad.</p>
+        
+        <h6 class="fw-bold mt-3" style="color: #3e7262;">4. Protección de Datos (Privacidad)</h6>
+        <p>Tus datos personales están protegidos conforme a nuestras políticas internas de privacidad y serán utilizados únicamente para la gestión de tus citas, facturación y mejoras en el servicio de bienestar de Serenity Spa.</p>
+      </div>
+      <div class="modal-footer border-0 pt-0" style="padding: 15px 25px 25px;">
+        <button type="button" id="botonterminos" class="btn btn-spa w-100 py-2" data-bs-dismiss="modal" style="border-radius: 10px;">Entendido y Acepto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- WhatsApp -->
 <a href="https://wa.me/573001234567" target="_blank" class="whatsapp">
   <i class="bi bi-whatsapp"></i>
 </a>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="scripts/database.js"></script>

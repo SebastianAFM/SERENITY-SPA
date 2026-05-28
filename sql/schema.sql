@@ -39,4 +39,14 @@ CREATE TABLE reservas (
   INSERT INTO usuarios (nombre, apellido, correo, password, rol) 
   VALUES ('Admin', 'Serenity', 'admin@serenity.com', 'admin12345', 'admin')
   ON CONFLICT (correo) DO NOTHING;
+
+  -- 4. NUEVAS ADICIONES PARA EL ROL DE TRABAJADOR Y ASIGNACIÓN:
+  
+  -- Agregar columna para el terapeuta/trabajador en la tabla de reservas:
+  ALTER TABLE reservas ADD COLUMN IF NOT EXISTS trabajador TEXT;
+
+  -- Insertar un Trabajador de Prueba para el Portal de Trabajadores:
+  INSERT INTO usuarios (nombre, apellido, correo, password, rol) 
+  VALUES ('Carlos', 'Ruiz', 'trabajador@serenity.com', 'trabajador123', 'trabajador')
+  ON CONFLICT (correo) DO NOTHING;
 */
