@@ -68,7 +68,7 @@ async function cargarDatosBase() {
 
   } catch (error) {
     console.error("Error al cargar datos desde Supabase:", error.message);
-    alert("Hubo un error al conectar con la base de datos Supabase. Por favor revisa que hayas ejecutado el script en tu panel de Supabase.");
+    alert("Hubo un error al conectar con la base de datos Supabase: " + error.message + "\n\nPor favor revisa que hayas ejecutado el script en tu panel de Supabase.");
   }
 }
 

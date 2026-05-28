@@ -92,6 +92,6 @@ async function iniciarSesion(correo, password) {
 
   } catch (err) {
     console.error("Error inesperado:", err);
-    alert("Ocurrió un error inesperado al iniciar sesión.");
+    alert("Ocurrió un error inesperado al iniciar sesión: " + err.message);
   }
 }

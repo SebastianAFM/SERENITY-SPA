@@ -84,6 +84,6 @@ async function registrarUsuario(correo, password, nombre, apellido) {
         }
     } catch (err) {
         console.error("Error inesperado:", err);
-        alert("Ocurrió un error inesperado al conectar con la base de datos.");
+        alert("Ocurrió un error inesperado al conectar con la base de datos: " + err.message);
     }
 }
