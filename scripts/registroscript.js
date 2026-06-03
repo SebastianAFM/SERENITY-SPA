@@ -33,7 +33,7 @@ const form = document.getElementById("registroForm");
       }
 
       // Validación correo
-      const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const correoRegex = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|icloud)\.(com|co|net)$/i;
 
       if(!correoRegex.test(correo)){
         correoError.style.display = "block";
@@ -41,8 +41,14 @@ const form = document.getElementById("registroForm");
       }
 
       // Validación contraseña
-      // mínimo 8 caracteres, 1 mayúscula y 1 número
-      const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+      // mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^*()_+\-=\[\]{};:,.?~\\|`]).{8,12}$/;
+      const caracteresProhibidos = /[<>'"/&]/;
+
+    if (caracteresProhibidos.test(password)) {
+        passwordError.style.display = "block";
+        valido = false;
+    }
 
       if(!passwordRegex.test(password)){
         passwordError.style.display = "block";
