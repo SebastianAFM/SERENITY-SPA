@@ -46,29 +46,52 @@
     };
 
     window.switchUserTab = function(tab) {
+      const tabInicio = document.getElementById("tabContentInicio");
       const tabReservas = document.getElementById("tabContentReservas");
       const tabTienda = document.getElementById("tabContentTienda");
       const navReservas = document.getElementById("navReservas");
       const navTienda = document.getElementById("navTienda");
 
-      if (tab === 'reservas') {
+      if (tab === 'Inicio') {
+        tabInicio.style.display = 'block';
+        tabReservas.style.display = 'none';
+        tabTienda.style.display = 'none';
+        navInicio.classList.add('fw-bold');
+        navInicio.style.color = '#4f8f7b';
+        navInicio.style.borderBottom = '2px solid #4f8f7b';
+        navReservas.classList.remove('fw-bold');
+        navReservas.style.color = '#555';
+        navReservas.style.borderBottom = 'none';
+        navTienda.classList.remove('fw-bold');
+        navTienda.style.color = '#555';
+        navTienda.style.borderBottom = 'none';
+      } else if (tab ==='reservas') {
         tabReservas.style.display = 'block';
         tabTienda.style.display = 'none';
+        tabInicio.style.display = 'none';
         navReservas.classList.add('fw-bold');
         navReservas.style.color = '#4f8f7b';
         navReservas.style.borderBottom = '2px solid #4f8f7b';
         navTienda.classList.remove('fw-bold');
         navTienda.style.color = '#555';
         navTienda.style.borderBottom = 'none';
-      } else {
-        tabReservas.style.display = 'none';
+        navInicio.classList.remove('fw-bold');
+        navInicio.style.color = '#555';
+        navInicio.style.borderBottom = 'none';
+      }
+      else {
         tabTienda.style.display = 'block';
+        tabInicio.style.display = 'none';
+        tabReservas.style.display = 'none';
         navTienda.classList.add('fw-bold');
         navTienda.style.color = '#4f8f7b';
         navTienda.style.borderBottom = '2px solid #4f8f7b';
         navReservas.classList.remove('fw-bold');
         navReservas.style.color = '#555';
         navReservas.style.borderBottom = 'none';
+        navInicio.classList.remove('fw-bold');
+        navInicio.style.color = '#555';
+        navInicio.style.borderBottom = 'none';
       }
     };
 

@@ -44,11 +44,11 @@
         <ul class="navbar-nav ms-auto">
 
           <li class="nav-item">
-            <a class="nav-link" href="index.html"><i class="bi bi-house-door-fill me-1"></i>Inicio</a>
+            <a class="nav-link" href="#" id="navInicio" onclick="switchUserTab('Inicio')"  style="color: #4f8f7b !important; border-bottom: 2px solid #4f8f7b;"><i class="bi bi-house-door-fill me-1"></i>Inicio</a>
           </li>
 
           <li class="nav-item">
-            <a class="nav-link fw-bold" href="#" id="navReservas" onclick="switchUserTab('reservas')" style="color: #4f8f7b !important; border-bottom: 2px solid #4f8f7b;"><i class="bi bi-calendar-event me-1"></i>Reservas</a>
+            <a class="nav-link fw-bold" href="#" id="navReservas" onclick="switchUserTab('reservas')"><i class="bi bi-calendar-event me-1"></i>Reservas</a>
           </li>
 
           <li class="nav-item">
@@ -73,7 +73,7 @@
 
     <div class="hero-card">
 
-      <h1>Portal de Reservas</h1>
+      <h1>Portal de Usuario</h1>
 
       <p>
         Gestiona tus sesiones de relajación y bienestar
@@ -87,9 +87,68 @@
   <!-- CONTENIDO -->
 
   <div class="container my-5">
+    <!-- SECCION INICIO -->
+    <div id="tabContentInicio">
+      <div class="glass-card mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+          <div>
+            <h2 class="section-title m-0">
+              <i class="bi bi-house-door-fill"></i>
+              Inicio
+            </h2>
+            <section id="servicios" class="container py-5">
+              <h2 class="text-center section-title" data-aos="fade-up">Servicios</h2>
+                <div class="row text-center">
+                  <div class="col-md-4" data-aos="zoom-in">
+                    <h4>Masajes</h4>
+                    <p>Terapias relajantes y descontracturantes.</p>
+                  </div>
+                  <div class="col-md-4" data-aos="zoom-in">
+                    <h4>Faciales</h4>
+                    <p>Tratamientos rejuvenecedores.</p>
+                  </div> 
+                  <div class="col-md-4" data-aos="zoom-in">
+                    <h4>Sauna</h4>
+                    <p>Purificación total del cuerpo.</p>
+                  </div>
+                </div>
+                <br>
+              <div class="row text-center">
+              <div class="col-md-4" data-aos="zoom-in">
+              <h4>Pestañas</h4>
+              <p>pestañas pelo a pelo, resultado natural.</p>
+              </div>
+              <div class="col-md-4" data-aos="zoom-in">
+              <h4>Exfoliación</h4>
+              <p>Piel suave e hidratada.</p>
+              </div>
+
+    <div class="col-md-4" data-aos="zoom-in">
+      <h4>Fisioterapia</h4>
+      <p>Mejora de movilidad con tratamientos especializados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Galería -->
+<section id="galeria" class="container py-5">
+  <h2 class="text-center section-title">Galería</h2>
+
+  <div class="row gallery g-3">
+    <div class="col-md-4"><img src="img/foto_galeria_1.jpg"></div>
+    <div class="col-md-4"><img src="img/foto_galeria_2.jpg"></div>
+    <div class="col-md-4"><img src="img/foto_galeria_3.jpg"></div>
+  </div>
+</section>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  
 
     <!-- SECCIÓN DE RESERVAS -->
-    <div id="tabContentReservas">
+    <div id="tabContentReservas" style="display: none;">
       <!-- FORMULARIO -->
 
       <div class="glass-card mb-5">

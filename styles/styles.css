@@ -92,5 +92,8 @@ body {
       border-top-left-radius: 20px;
       border-top-right-radius: 20px;
     }
+    #loginbtn, #registerbtn {
+      font-weight: bold;
+    }
 
     
