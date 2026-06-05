@@ -32,6 +32,9 @@
       fin: "18:00"
     };
 
+    // Cache local de trabajadores cargados desde BD
+    let trabajadoresCache = [];
+
     function esHoraValida(hora) {
       return hora >= horarioAtencion.inicio && hora <= horarioAtencion.fin;
     }
@@ -96,6 +99,59 @@
       return null;
     }
 
+    async function cargarTrabajadores() {
+      const select = document.getElementById("trabajador");
+      if (!select) return;
+
+      // Primer opción por defecto
+      select.innerHTML = '<option value="Cualquiera">Cualquiera (Asignación automática)</option>';
+
+      const { data: trabajadores, error } = await supabase
+        .from('usuarios')
+        .select('nombre, apellido, servicios')
+        .eq('rol', 'trabajador')
+        .order('nombre', { ascending: true });
+
+      if (error) {
+        console.error('Error cargando trabajadores:', error.message);
+        return;
+      }
+
+      // Guardar en cache y poblar según servicio seleccionado
+      trabajadoresCache = (trabajadores || []).map(t => ({
+        nombreCompleto: `${t.nombre} ${t.apellido}`,
+        servicios: t.servicios // puede ser null, string CSV o array
+      }));
+
+      filtrarTrabajadoresPorServicio();
+    }
+
+    function normalizarServicios(servicios) {
+      if (!servicios) return [];
+      if (Array.isArray(servicios)) return servicios.map(s => s.toString().trim().toLowerCase());
+      return servicios.toString().split(',').map(s => s.trim().toLowerCase());
+    }
+
+    function filtrarTrabajadoresPorServicio() {
+      const servicioSeleccionado = (document.getElementById('servicio')?.value || '').toLowerCase();
+      const select = document.getElementById('trabajador');
+      if (!select) return;
+
+      // limpiar y dejar la opción por defecto
+      select.innerHTML = '<option value="Cualquiera">Cualquiera (Asignación automática)</option>';
+
+      trabajadoresCache.forEach(t => {
+        // si no hay servicios definidos para el trabajador, lo mostramos por compatibilidad
+        const servicios = normalizarServicios(t.servicios);
+        if (!servicioSeleccionado || servicioSeleccionado === '' || servicios.length === 0 || servicios.includes(servicioSeleccionado.toLowerCase())) {
+          const opt = document.createElement('option');
+          opt.value = t.nombreCompleto;
+          opt.text = t.nombreCompleto;
+          select.appendChild(opt);
+        }
+      });
+    }
+
     function configurarHorarioAtencion() {
       const horaInput = document.getElementById("hora");
       if (horaInput) {
@@ -117,6 +173,13 @@
         nombreInput.disabled = true; // El nombre está bloqueado para el usuario logueado
       }
       configurarHorarioAtencion();
+      cargarTrabajadores();
+
+      // Escuchar cambios en el servicio para filtrar trabajadores disponibles
+      const servicioSelect = document.getElementById('servicio');
+      if (servicioSelect) {
+        servicioSelect.addEventListener('change', () => filtrarTrabajadoresPorServicio());
+      }
     });
 
     /* ========================================= */
@@ -397,9 +460,12 @@
         return
       }
 
-      const hoy = new Date().toISOString().split('T')[0];
-      if (fecha < hoy) {
-        alert("No se pueden reservar fechas anteriores al día de hoy.")
+      const ahora = new Date();
+      const seleccion = new Date(`${fecha}T${hora}`);
+      const minAllowed = new Date(ahora.getTime() + 60 * 60 * 1000); // 1 hora
+
+      if (seleccion < minAllowed) {
+        alert("Las reservas deben solicitarse con al menos 1 hora de anticipación y no pueden ser en el pasado.");
         return
       }
 

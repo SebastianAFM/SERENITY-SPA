@@ -8,6 +8,7 @@ CREATE TABLE usuarios (
   rol TEXT DEFAULT 'cliente' NOT NULL, -- 'cliente', 'admin' o 'trabajador'
   horario_inicio TEXT, -- Hora de inicio del turno para trabajadores (ej: '09:00')
   horario_fin TEXT, -- Hora de fin del turno para trabajadores (ej: '18:00')
+  servicios TEXT[], -- Servicios que puede ofrecer el trabajador
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -33,9 +34,10 @@ CREATE TABLE reservas (
   -- 1. Agregar columna de rol a usuarios
   ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'cliente' NOT NULL;
 
-  -- 2. Agregar horarios a usuarios (para trabajadores)
+  -- 2. Agregar horarios y servicios a usuarios (para trabajadores)
   ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS horario_inicio TEXT DEFAULT '09:00';
   ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS horario_fin TEXT DEFAULT '18:00';
+  ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS servicios TEXT[];
 
   -- 3. Agregar columnas faltantes a reservas
   ALTER TABLE reservas ADD COLUMN IF NOT EXISTS nombre TEXT;
@@ -49,15 +51,15 @@ CREATE TABLE reservas (
   ON CONFLICT (correo) DO NOTHING;
 
   -- 5. Insertar Trabajadores de Prueba para el Portal de Trabajadores:
-  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin) 
-  VALUES ('Carlos', 'Ruiz', 'carlos@serenity.com', 'trabajador123', 'trabajador', '09:00', '17:00')
+  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin, servicios) 
+  VALUES ('Carlos', 'Ruiz', 'carlos@serenity.com', 'trabajador123', 'trabajador', '09:00', '17:00', ARRAY['Masaje relajante', 'Aromaterapia'])
   ON CONFLICT (correo) DO NOTHING;
 
-  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin) 
-  VALUES ('Laura', 'Gómez', 'laura@serenity.com', 'trabajador123', 'trabajador', '10:00', '18:00')
+  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin, servicios) 
+  VALUES ('Laura', 'Gómez', 'laura@serenity.com', 'trabajador123', 'trabajador', '10:00', '18:00', ARRAY['Tratamiento facial', 'Masaje terapéutico'])
   ON CONFLICT (correo) DO NOTHING;
 
-  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin) 
-  VALUES ('Sofía', 'Marín', 'sofia@serenity.com', 'trabajador123', 'trabajador', '08:00', '16:00')
+  INSERT INTO usuarios (nombre, apellido, correo, password, rol, horario_inicio, horario_fin, servicios) 
+  VALUES ('Sofía', 'Marín', 'sofia@serenity.com', 'trabajador123', 'trabajador', '08:00', '16:00', ARRAY['Pedicura', 'Masaje descontracturante'])
   ON CONFLICT (correo) DO NOTHING;
 */

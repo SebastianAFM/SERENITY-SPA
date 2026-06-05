@@ -198,11 +198,12 @@
             <thead>
               <tr>
                 <th>Usuario</th>
-                <th>Correo Electrónico</th>
-                <th>Rol</th>
-                <th>Horario</th>
-                <th>Fecha de Registro</th>
-                <th class="text-center">Acciones</th>
+            <th>Correo Electrónico</th>
+            <th>Rol</th>
+            <th>Horario</th>
+            <th>Servicios</th>
+            <th>Fecha de Registro</th>
+            <th class="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody id="tabla-usuarios">
@@ -312,6 +313,12 @@
             </div>
           </div>
           <div class="form-text">Especifica el horario de trabajo para este terapeuta. Solo aplica si el rol es Trabajador.</div>
+        </div>
+
+        <div id="modal-servicios-group" class="mb-3" style="display: none;">
+          <label class="form-label fw-semibold">Servicios del Trabajador</label>
+          <textarea id="modal-rol-servicios" class="form-control rounded-3" rows="2" placeholder="Ej: Masaje relajante, Tratamiento facial"></textarea>
+          <div class="form-text">Escribe los servicios que puede brindar este trabajador, separados por comas.</div>
         </div>
       </div>
       <div class="modal-footer">

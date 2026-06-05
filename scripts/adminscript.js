@@ -302,7 +302,7 @@ window.renderTablaUsuarios = function(filtrados = null) {
   const lista = filtrados || usersData;
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron usuarios.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron usuarios.</td></tr>`;
     return;
   }
 
@@ -328,6 +328,7 @@ window.renderTablaUsuarios = function(filtrados = null) {
       <td>${u.correo}</td>
       <td><span class="badge-role ${u.rol.toLowerCase()}">${u.rol}</span></td>
       <td>${horario}</td>
+      <td>${u.rol === 'trabajador' ? (Array.isArray(u.servicios) ? u.servicios.join(', ') : u.servicios || '-') : '-'}</td>
       <td>${fechaReg}</td>
       <td class="text-center">
         <button class="btn-action-edit me-2" onclick="abrirModalRol('${u.id}', '${u.nombre} ${u.apellido}', '${u.correo}', '${u.rol}')" title="Administrar Rol">
@@ -370,6 +371,9 @@ window.abrirModalRol = function(id, nombreCompleto, correo, rolActual) {
 
   document.getElementById("modal-rol-horario-inicio").value = usuario.horario_inicio || '09:00';
   document.getElementById("modal-rol-horario-fin").value = usuario.horario_fin || '18:00';
+  document.getElementById("modal-rol-servicios").value = Array.isArray(usuario.servicios)
+    ? usuario.servicios.join(', ')
+    : usuario.servicios || '';
   mostrarCamposHorario();
 
   const modal = new bootstrap.Modal(document.getElementById('modalEditarRol'));
@@ -379,11 +383,14 @@ window.abrirModalRol = function(id, nombreCompleto, correo, rolActual) {
 window.mostrarCamposHorario = function() {
   const rol = document.getElementById("modal-rol-select").value;
   const horarioGroup = document.getElementById("modal-horario-group");
+  const serviciosGroup = document.getElementById("modal-servicios-group");
 
   if (rol === 'trabajador') {
     horarioGroup.style.display = 'block';
+    serviciosGroup.style.display = 'block';
   } else {
     horarioGroup.style.display = 'none';
+    serviciosGroup.style.display = 'none';
   }
 }
 
@@ -393,6 +400,7 @@ window.guardarRolUsuario = async function() {
   const nuevoRol = document.getElementById("modal-rol-select").value;
   const horarioInicio = document.getElementById("modal-rol-horario-inicio").value;
   const horarioFin = document.getElementById("modal-rol-horario-fin").value;
+  const serviciosText = document.getElementById("modal-rol-servicios").value.trim();
 
   const datosActualizar = {
     rol: nuevoRol
@@ -401,9 +409,11 @@ window.guardarRolUsuario = async function() {
   if (nuevoRol === 'trabajador') {
     datosActualizar.horario_inicio = horarioInicio || '09:00';
     datosActualizar.horario_fin = horarioFin || '18:00';
+    datosActualizar.servicios = serviciosText ? serviciosText.split(',').map(s => s.trim()).filter(Boolean) : null;
   } else {
     datosActualizar.horario_inicio = null;
     datosActualizar.horario_fin = null;
+    datosActualizar.servicios = null;
   }
 
   try {
