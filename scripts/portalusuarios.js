@@ -27,12 +27,96 @@
     }
 
     // Auto-completar nombre
+    const horarioAtencion = {
+      inicio: "09:00",
+      fin: "18:00"
+    };
+
+    function esHoraValida(hora) {
+      return hora >= horarioAtencion.inicio && hora <= horarioAtencion.fin;
+    }
+
+    async function existeConflictoReserva(trabajador, fecha, hora, excludeId = null) {
+      if (trabajador === 'Cualquiera') return false;
+
+      let query = supabase
+        .from('reservas')
+        .select('id')
+        .eq('trabajador', trabajador)
+        .eq('fecha', fecha)
+        .eq('hora', hora)
+        .neq('estado', 'Cancelada');
+
+      if (excludeId) {
+        query = query.neq('id', excludeId);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data.length > 0;
+    }
+
+    async function asignarTrabajadorLibre(fecha, hora) {
+      const { data: trabajadores, error: errTrabajadores } = await supabase
+        .from('usuarios')
+        .select('nombre, apellido, horario_inicio, horario_fin')
+        .eq('rol', 'trabajador');
+
+      if (errTrabajadores) {
+        throw new Error(errTrabajadores.message);
+      }
+
+      const { data: reservas, error: errReservas } = await supabase
+        .from('reservas')
+        .select('trabajador')
+        .eq('fecha', fecha)
+        .eq('hora', hora)
+        .neq('estado', 'Cancelada');
+
+      if (errReservas) {
+        throw new Error(errReservas.message);
+      }
+
+      const reservados = reservas.map(r => r.trabajador);
+
+      for (const trabajador of trabajadores) {
+        const nombreCompleto = `${trabajador.nombre} ${trabajador.apellido}`;
+        const inicio = trabajador.horario_inicio || horarioAtencion.inicio;
+        const fin = trabajador.horario_fin || horarioAtencion.fin;
+
+        if (hora < inicio || hora > fin) continue;
+        if (reservados.includes(nombreCompleto)) continue;
+
+        return nombreCompleto;
+      }
+
+      return null;
+    }
+
+    function configurarHorarioAtencion() {
+      const horaInput = document.getElementById("hora");
+      if (horaInput) {
+        horaInput.min = horarioAtencion.inicio;
+        horaInput.max = horarioAtencion.fin;
+      }
+
+      const fechaInput = document.getElementById("fecha");
+      if (fechaInput) {
+        const hoy = new Date().toISOString().split("T")[0];
+        fechaInput.min = hoy;
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const nombreInput = document.getElementById("nombre");
       if (nombreInput && usuarioLogueado) {
         nombreInput.value = usuarioLogueado.nombre + " " + usuarioLogueado.apellido;
         nombreInput.disabled = true; // El nombre está bloqueado para el usuario logueado
       }
+      configurarHorarioAtencion();
     });
 
     /* ========================================= */
@@ -295,7 +379,7 @@
       const servicio =
         document.getElementById("servicio").value
 
-      const trabajador =
+      let trabajador =
         document.getElementById("trabajador").value
 
       const fecha =
@@ -310,6 +394,44 @@
       ) {
 
         alert("Completa todos los campos")
+        return
+      }
+
+      const hoy = new Date().toISOString().split('T')[0];
+      if (fecha < hoy) {
+        alert("No se pueden reservar fechas anteriores al día de hoy.")
+        return
+      }
+
+      if (!esHoraValida(hora)) {
+        alert(`Las reservas solo se pueden solicitar dentro del horario de atención: ${horarioAtencion.inicio} a ${horarioAtencion.fin}.`)
+        return
+      }
+
+      if (trabajador === 'Cualquiera') {
+        try {
+          const asignado = await asignarTrabajadorLibre(fecha, hora);
+          if (!asignado) {
+            alert("No hay ningún terapeuta disponible para ese horario. Por favor elige otra fecha u hora.");
+            return
+          }
+          trabajador = asignado;
+        } catch (err) {
+          console.error(err)
+          alert("Error al asignar un terapeuta disponible: " + err.message)
+          return
+        }
+      }
+
+      try {
+        const conflicto = await existeConflictoReserva(trabajador, fecha, hora)
+        if (conflicto) {
+          alert(`El terapeuta ${trabajador} ya tiene otra reserva para ${fecha} a las ${hora}. Elige otro horario o terapeuta.`)
+          return
+        }
+      } catch (err) {
+        console.error(err)
+        alert("Error al validar la disponibilidad: " + err.message)
         return
       }
 
@@ -383,6 +505,41 @@
 
       if (!nuevaFecha || !nuevaHora)
         return
+
+      const hoy = new Date().toISOString().split('T')[0];
+      if (nuevaFecha < hoy) {
+        alert("No se pueden reservar fechas anteriores al día de hoy.")
+        return
+      }
+
+      if (!esHoraValida(nuevaHora)) {
+        alert(`Las reservas solo se pueden solicitar dentro del horario de atención: ${horarioAtencion.inicio} a ${horarioAtencion.fin}.`)
+        return
+      }
+
+      const { data: reserva, error: fetchError } = await supabase
+        .from('reservas')
+        .select('trabajador')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) {
+        console.error(fetchError)
+        alert("Error al recuperar la reserva para reagendar: " + fetchError.message)
+        return
+      }
+
+      try {
+        const conflicto = await existeConflictoReserva(reserva.trabajador, nuevaFecha, nuevaHora, id)
+        if (conflicto) {
+          alert(`El terapeuta ${reserva.trabajador} ya tiene otra reserva para ${nuevaFecha} a las ${nuevaHora}. Elige otro horario o terapeuta.`)
+          return
+        }
+      } catch (err) {
+        console.error(err)
+        alert("Error al validar la disponibilidad: " + err.message)
+        return
+      }
 
       const { error } = await supabase
         .from('reservas')

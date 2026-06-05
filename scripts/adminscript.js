@@ -35,8 +35,72 @@ function verificarSesionAdmin() {
   document.getElementById("admin-avatar-initials").innerText = usuario.nombre[0].toUpperCase() + (usuario.apellido ? usuario.apellido[0].toUpperCase() : "");
 }
 
+function establecerMinimoFechaReservasAdmin() {
+  const hoy = new Date().toISOString().split('T')[0];
+  const fechaEditar = document.getElementById('modal-reserva-fecha');
+  const fechaCrear = document.getElementById('modal-crear-fecha');
+
+  if (fechaEditar) fechaEditar.min = hoy;
+  if (fechaCrear) fechaCrear.min = hoy;
+}
+
+function obtenerHorarioTrabajadorPorNombre(nombreCompleto) {
+  const trabajador = usersData.find(u => u.rol === 'trabajador' && `${u.nombre} ${u.apellido}` === nombreCompleto);
+  if (!trabajador) return null;
+  return {
+    inicio: trabajador.horario_inicio || '09:00',
+    fin: trabajador.horario_fin || '18:00'
+  };
+}
+
+function esFechaValidaReserva(fecha) {
+  return fecha >= new Date().toISOString().split('T')[0];
+}
+
+function esHoraDentroHorario(hora, horario) {
+  return hora >= horario.inicio && hora <= horario.fin;
+}
+
+async function asignarTrabajadorLibreAdmin(fecha, hora) {
+  const { data: trabajadores, error: errTrabajadores } = await supabase
+    .from('usuarios')
+    .select('nombre, apellido, horario_inicio, horario_fin')
+    .eq('rol', 'trabajador');
+
+  if (errTrabajadores) {
+    throw new Error(errTrabajadores.message);
+  }
+
+  const { data: reservas, error: errReservas } = await supabase
+    .from('reservas')
+    .select('trabajador')
+    .eq('fecha', fecha)
+    .eq('hora', hora)
+    .neq('estado', 'Cancelada');
+
+  if (errReservas) {
+    throw new Error(errReservas.message);
+  }
+
+  const reservados = reservas.map(r => r.trabajador);
+
+  for (const trabajador of trabajadores) {
+    const nombreCompleto = `${trabajador.nombre} ${trabajador.apellido}`;
+    const inicio = trabajador.horario_inicio || '09:00';
+    const fin = trabajador.horario_fin || '18:00';
+
+    if (hora < inicio || hora > fin) continue;
+    if (reservados.includes(nombreCompleto)) continue;
+
+    return nombreCompleto;
+  }
+
+  return null;
+}
+
 async function inicializarDashboard() {
   await cargarDatosBase();
+  establecerMinimoFechaReservasAdmin();
   renderMetrics();
   renderRecentActivity();
   renderReservasRecientes();
@@ -238,7 +302,7 @@ window.renderTablaUsuarios = function(filtrados = null) {
   const lista = filtrados || usersData;
 
   if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No se encontraron usuarios.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron usuarios.</td></tr>`;
     return;
   }
 
@@ -250,6 +314,10 @@ window.renderTablaUsuarios = function(filtrados = null) {
       year: 'numeric'
     });
 
+    const horario = u.rol === 'trabajador'
+      ? `${u.horario_inicio || '09:00'} - ${u.horario_fin || '18:00'}`
+      : '-';
+
     tr.innerHTML = `
       <td>
         <div class="d-flex align-items-center gap-3">
@@ -259,6 +327,7 @@ window.renderTablaUsuarios = function(filtrados = null) {
       </td>
       <td>${u.correo}</td>
       <td><span class="badge-role ${u.rol.toLowerCase()}">${u.rol}</span></td>
+      <td>${horario}</td>
       <td>${fechaReg}</td>
       <td class="text-center">
         <button class="btn-action-edit me-2" onclick="abrirModalRol('${u.id}', '${u.nombre} ${u.apellido}', '${u.correo}', '${u.rol}')" title="Administrar Rol">
@@ -291,25 +360,56 @@ window.filtrarUsuarios = function() {
 
 // Abrir modal de Rol
 window.abrirModalRol = function(id, nombreCompleto, correo, rolActual) {
+  const usuario = usersData.find(u => u.id === id) || {};
+
   document.getElementById("modal-rol-userid").value = id;
   document.getElementById("modal-rol-username").innerText = nombreCompleto;
   document.getElementById("modal-rol-useremail").innerText = correo;
   document.getElementById("modal-rol-select").value = rolActual;
   document.getElementById("modal-rol-avatar").innerText = nombreCompleto[0].toUpperCase() + (nombreCompleto.split(" ")[1] ? nombreCompleto.split(" ")[1][0].toUpperCase() : "");
 
+  document.getElementById("modal-rol-horario-inicio").value = usuario.horario_inicio || '09:00';
+  document.getElementById("modal-rol-horario-fin").value = usuario.horario_fin || '18:00';
+  mostrarCamposHorario();
+
   const modal = new bootstrap.Modal(document.getElementById('modalEditarRol'));
   modal.show();
+}
+
+window.mostrarCamposHorario = function() {
+  const rol = document.getElementById("modal-rol-select").value;
+  const horarioGroup = document.getElementById("modal-horario-group");
+
+  if (rol === 'trabajador') {
+    horarioGroup.style.display = 'block';
+  } else {
+    horarioGroup.style.display = 'none';
+  }
 }
 
 // Guardar Rol de Usuario
 window.guardarRolUsuario = async function() {
   const id = document.getElementById("modal-rol-userid").value;
   const nuevoRol = document.getElementById("modal-rol-select").value;
+  const horarioInicio = document.getElementById("modal-rol-horario-inicio").value;
+  const horarioFin = document.getElementById("modal-rol-horario-fin").value;
+
+  const datosActualizar = {
+    rol: nuevoRol
+  };
+
+  if (nuevoRol === 'trabajador') {
+    datosActualizar.horario_inicio = horarioInicio || '09:00';
+    datosActualizar.horario_fin = horarioFin || '18:00';
+  } else {
+    datosActualizar.horario_inicio = null;
+    datosActualizar.horario_fin = null;
+  }
 
   try {
     const { error } = await supabase
       .from('usuarios')
-      .update({ rol: nuevoRol })
+      .update(datosActualizar)
       .eq('id', id);
 
     if (error) throw error;
@@ -434,6 +534,17 @@ window.guardarEdicionReserva = async function() {
   const hora = document.getElementById("modal-reserva-hora").value;
   const estado = document.getElementById("modal-reserva-estado").value;
 
+  if (!esFechaValidaReserva(fecha)) {
+    alert("No se pueden reservar fechas anteriores al día de hoy.");
+    return;
+  }
+
+  const horario = trabajador !== 'Cualquiera' ? obtenerHorarioTrabajadorPorNombre(trabajador) : null;
+  if (horario && !esHoraDentroHorario(hora, horario)) {
+    alert(`La hora seleccionada no está dentro del horario laboral de ${trabajador}: ${horario.inicio} - ${horario.fin}.`);
+    return;
+  }
+
   try {
     const { error } = await supabase
       .from('reservas')
@@ -506,12 +617,38 @@ window.guardarNuevaReservaAdmin = async function() {
   const usuarioId = document.getElementById("modal-crear-usuario-id").value;
   const nombre = document.getElementById("modal-crear-nombre").value;
   const servicio = document.getElementById("modal-crear-servicio").value;
-  const trabajador = document.getElementById("modal-crear-trabajador").value;
+  let trabajador = document.getElementById("modal-crear-trabajador").value;
   const fecha = document.getElementById("modal-crear-fecha").value;
   const hora = document.getElementById("modal-crear-hora").value;
 
   if (nombre.trim() === "" || fecha === "" || hora === "") {
     alert("Por favor completa los datos obligatorios (Nombre, Fecha y Hora).");
+    return;
+  }
+
+  if (!esFechaValidaReserva(fecha)) {
+    alert("No se pueden reservar fechas anteriores al día de hoy.");
+    return;
+  }
+
+  if (trabajador === 'Cualquiera') {
+    try {
+      const asignado = await asignarTrabajadorLibreAdmin(fecha, hora);
+      if (!asignado) {
+        alert("No hay ningún terapeuta disponible para ese horario. Por favor elige otra fecha u hora.");
+        return;
+      }
+      trabajador = asignado;
+    } catch (err) {
+      console.error(err);
+      alert("Error al asignar un terapeuta disponible: " + err.message);
+      return;
+    }
+  }
+
+  const horario = trabajador !== 'Cualquiera' ? obtenerHorarioTrabajadorPorNombre(trabajador) : null;
+  if (horario && !esHoraDentroHorario(hora, horario)) {
+    alert(`La hora seleccionada no está dentro del horario laboral de ${trabajador}: ${horario.inicio} - ${horario.fin}.`);
     return;
   }
 

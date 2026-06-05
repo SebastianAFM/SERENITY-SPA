@@ -200,6 +200,7 @@
                 <th>Usuario</th>
                 <th>Correo Electrónico</th>
                 <th>Rol</th>
+                <th>Horario</th>
                 <th>Fecha de Registro</th>
                 <th class="text-center">Acciones</th>
               </tr>
@@ -293,11 +294,24 @@
 
         <div class="mb-3">
           <label class="form-label fw-semibold">Asignar Rol</label>
-          <select id="modal-rol-select" class="form-select form-select-lg rounded-3">
+          <select id="modal-rol-select" class="form-select form-select-lg rounded-3" onchange="mostrarCamposHorario()">
             <option value="cliente">Cliente (Acceso básico al portal de citas)</option>
             <option value="admin">Administrador (Acceso completo al panel administrativo)</option>
             <option value="trabajador">Trabajador (Acceso al panel de trabajador)</option>
           </select>
+        </div>
+
+        <div id="modal-horario-group" class="mb-3" style="display: none;">
+          <label class="form-label fw-semibold">Horario del Trabajador</label>
+          <div class="row g-2">
+            <div class="col">
+              <input type="time" id="modal-rol-horario-inicio" class="form-control rounded-3" placeholder="Inicio">
+            </div>
+            <div class="col">
+              <input type="time" id="modal-rol-horario-fin" class="form-control rounded-3" placeholder="Fin">
+            </div>
+          </div>
+          <div class="form-text">Especifica el horario de trabajo para este terapeuta. Solo aplica si el rol es Trabajador.</div>
         </div>
       </div>
       <div class="modal-footer">
