@@ -1,7 +1,9 @@
 // Lógica del Dashboard del Administrador - Serenity Spa
 let usersData = [];
 let bookingsData = [];
+let productosData = [];
 let servicesChart = null;
+const LOW_STOCK_THRESHOLD = 3;
 
 // Precios estimados para calcular ganancias dinámicas
 const PRECIOS_SERVICIOS = {
@@ -102,6 +104,7 @@ async function inicializarDashboard() {
   await cargarDatosBase();
   establecerMinimoFechaReservasAdmin();
   renderMetrics();
+  renderLowStockAlertas();
   renderRecentActivity();
   renderReservasRecientes();
   renderTablaUsuarios();
@@ -129,6 +132,14 @@ async function cargarDatosBase() {
 
     if (errBookings) throw errBookings;
     bookingsData = bookings || [];
+
+    const { data: productos, error: errProductos } = await supabase
+      .from('productos')
+      .select('*')
+      .order('nombre', { ascending: true });
+
+    if (errProductos) throw errProductos;
+    productosData = productos || [];
 
   } catch (error) {
     console.error("Error al cargar datos desde Supabase:", error.message);
@@ -194,6 +205,44 @@ function renderMetrics() {
   } else {
     document.getElementById("stat-asistencia").innerText = "0%";
   }
+}
+
+function renderLowStockAlertas() {
+  const container = document.getElementById("low-stock-alerts");
+  if (!container) return;
+
+  const bajos = productosData.filter(p => p.stock > 0 && p.stock <= LOW_STOCK_THRESHOLD);
+
+  if (bajos.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-4 text-muted">
+        No hay productos con stock bajo en este momento.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="alert alert-warning d-flex align-items-start gap-3 mb-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+      <div>
+        <strong>${bajos.length} producto${bajos.length === 1 ? '' : 's'} con stock bajo</strong>
+        <div class="text-muted">Corrobora el inventario y repón los artículos antes de que se agoten.</div>
+      </div>
+    </div>
+    ${bajos.map(producto => `
+      <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+          <img src="${producto.imagen}" alt="${producto.nombre}" style="width:48px; height:48px; object-fit:cover; border-radius:12px;">
+          <div>
+            <strong>${producto.nombre}</strong>
+            <div class="text-muted" style="font-size: 13px;">Stock actual: ${producto.stock}</div>
+          </div>
+        </div>
+        <span class="badge bg-warning text-dark">Bajo stock</span>
+      </div>
+    `).join('')}
+  `;
 }
 
 // Genera un log de actividad simulado con datos reales para dar mayor realismo

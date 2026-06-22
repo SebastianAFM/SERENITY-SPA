@@ -1,13 +1,36 @@
 const form = document.getElementById("registroForm");
+const nombreInput = document.getElementById("nombre");
+const apellidoInput = document.getElementById("apellido");
+const correoInput = document.getElementById("correo");
+const passwordInput = document.getElementById("password");
+const confirmPasswordInput = document.getElementById("confirmPassword");
+
+const removeLeadingWhitespace = (input) => {
+    input.value = input.value.replace(/^\s+/, "");
+};
+
+const removeAllWhitespace = (input) => {
+    input.value = input.value.replace(/\s+/g, "");
+};
+
+[nombreInput, apellidoInput, correoInput].forEach((input) => {
+    input.addEventListener("input", () => removeLeadingWhitespace(input));
+});
+
+[passwordInput, confirmPasswordInput].forEach((input) => {
+    input.addEventListener("input", () => removeAllWhitespace(input));
+});
 
     form.addEventListener("submit", function(event){
 
       event.preventDefault();
 
       // Inputs
-      const correo = document.getElementById("correo").value;
-      const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+      const correo = correoInput.value.trimStart();
+      const nombre = nombreInput.value.trimStart();
+      const apellido = apellidoInput.value.trimStart();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
 
       // Errores
       const correoError = document.getElementById("correoError");
@@ -44,11 +67,12 @@ const form = document.getElementById("registroForm");
       // mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial
       const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^*()_+\-=\[\]{};:,.?~\\|`]).{8,12}$/;
       const caracteresProhibidos = /[<>'"/&]/;
+      const espaciosProhibidos = /\s/;
 
-    if (caracteresProhibidos.test(password)) {
+      if (caracteresProhibidos.test(password) || espaciosProhibidos.test(password)) {
         passwordError.style.display = "block";
         valido = false;
-    }
+      }
 
       if(!passwordRegex.test(password)){
         passwordError.style.display = "block";
@@ -61,9 +85,14 @@ const form = document.getElementById("registroForm");
         valido = false;
       }
 
+      // Actualizar valores con limpieza de espacios delante
+      nombreInput.value = nombre;
+      apellidoInput.value = apellido;
+      correoInput.value = correo;
+
       // Si todo es válido
       if(valido){
-        registrarUsuario(correo, password, document.getElementById("nombre").value, document.getElementById("apellido").value);
+        registrarUsuario(correo, password, nombre, apellido);
       }
 
     });

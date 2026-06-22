@@ -10,10 +10,10 @@
     const supabaseUrl = 'https://aonkerizxolmeizhizwp.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvbmtlcml6eG9sbWVpemhpendwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NzU4MDIsImV4cCI6MjA5NDQ1MTgwMn0.9awKi3grvNO7VP70gaCMQN_76SLTzCLLmHjdI4jNnlc'
 
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseKey
-    )
+    // Inicializar cliente Supabase y exponerlo en `window.supabase` para acceso global
+    const supabase = (window.supabase && typeof window.supabase.from === 'function')
+      ? window.supabase
+      : (window.supabase = createClient(supabaseUrl, supabaseKey));
 
     /* ========================================= */
     /* VERIFICACIÓN DE SESIÓN */
@@ -26,6 +26,40 @@
       window.location.href = "login.html";
     }
 
+    /* ========================================= */
+    /* VERIFICAR RESULTADO DE PAGO MERCADOPAGO */
+    /* ========================================= */
+
+    // Detectar parámetros GET cuando regresa de MercadoPago
+    const urlParams = new URLSearchParams(window.location.search);
+    const pagoPago = urlParams.get('pago');
+    const pagoOrdenId = urlParams.get('orden');
+
+    if (pagoPago && pagoOrdenId) {
+      (async () => {
+        const mensaje = {
+          exitoso: '✅ ¡Pago completado! Tu pedido ha sido confirmado.',
+          fallido: '❌ El pago fue rechazado. Por favor intenta nuevamente.',
+          pendiente: '⏳ Tu pago está pendiente de confirmación.'
+        };
+        
+        alert(mensaje[pagoPago] || 'Estado de pago desconocido');
+        
+        if (pagoPago === 'exitoso') {
+          // Actualizar orden a "pagada"
+          try {
+            await actualizarEstadoOrden(pagoOrdenId, 'pagada');
+            await actualizarStockDespuesCompra();
+            localStorage.removeItem('datosEnvioActual');
+          } catch (err) {
+            console.error('Error actualizando orden:', err);
+          }
+          // Limpiar URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      })();
+    }
+
     // Auto-completar nombre
     const horarioAtencion = {
       inicio: "09:00",
@@ -34,6 +68,7 @@
 
     // Cache local de trabajadores cargados desde BD
     let trabajadoresCache = [];
+    let productosCargados = false;
 
     function esHoraValida(hora) {
       return hora >= horarioAtencion.inicio && hora <= horarioAtencion.fin;
@@ -174,11 +209,23 @@
       }
       configurarHorarioAtencion();
       cargarTrabajadores();
+      cargarAvatarUsuario(); // Cargar avatar del usuario en navbar
 
       // Escuchar cambios en el servicio para filtrar trabajadores disponibles
       const servicioSelect = document.getElementById('servicio');
       if (servicioSelect) {
         servicioSelect.addEventListener('change', () => filtrarTrabajadoresPorServicio());
+      }
+
+      // Si la pestaña Tienda ya está visible/activa en la carga, cargar catálogo
+      try {
+        const tabTiendaEl = document.getElementById('tabContentTienda');
+        const navTiendaEl = document.getElementById('navTienda');
+        if ((tabTiendaEl && tabTiendaEl.style.display !== 'none') || (navTiendaEl && navTiendaEl.classList.contains('fw-bold'))) {
+          if (!productosCargados) cargarProductos();
+        }
+      } catch (e) {
+        console.warn('Comprobación inicial de pestaña tienda falló:', e);
       }
     });
 
@@ -239,6 +286,138 @@
         navInicio.classList.remove('fw-bold');
         navInicio.style.color = '#555';
         navInicio.style.borderBottom = 'none';
+        if (!productosCargados) cargarProductos();
+      }
+    };
+
+    /* ========================================= */
+    /* LÓGICA DEL PERFIL DE USUARIO */
+    /* ========================================= */
+
+    // Cargar avatar del usuario en la navbar
+    window.cargarAvatarUsuario = function() {
+      const usuario = JSON.parse(localStorage.getItem('usuarioLogueado'));
+      if (usuario && usuario.foto_perfil) {
+        const imgElement = document.getElementById('navUserAvatar');
+        if (imgElement) {
+          imgElement.src = usuario.foto_perfil;
+        }
+      }
+    };
+
+    // Abrir modal de perfil
+    window.abrirModalPerfil = function() {
+      const usuario = JSON.parse(localStorage.getItem('usuarioLogueado'));
+      
+      if (!usuario) {
+        alert('No se encontraron datos del usuario');
+        return;
+      }
+
+      // Cargar datos en el modal
+      document.getElementById('perfilNombre').value = usuario.nombre || '';
+      document.getElementById('perfilApellido').value = usuario.apellido || '';
+      document.getElementById('perfilCorreo').value = usuario.correo || '';
+      document.getElementById('perfilTelefono').value = usuario.telefono || '';
+      
+      if (usuario.foto_perfil) {
+        document.getElementById('perfilAvatarModal').src = usuario.foto_perfil;
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('perfilModal'));
+      modal.show();
+    };
+
+    // Vista previa de foto
+    window.previewFoto = function() {
+      const input = document.getElementById('fotoPerfil');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('perfilAvatarModal').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    };
+
+    // Guardar cambios del perfil
+    window.guardarPerfil = async function() {
+      const usuario = JSON.parse(localStorage.getItem('usuarioLogueado'));
+      const nombre = document.getElementById('perfilNombre').value.trim();
+      const apellido = document.getElementById('perfilApellido').value.trim();
+      const telefono = document.getElementById('perfilTelefono').value.trim();
+      const password = document.getElementById('perfilPassword').value.trim();
+
+      if (!nombre || !apellido) {
+        alert('Por favor completa nombre y apellido');
+        return;
+      }
+
+      try {
+        const datosActualizar = {
+          nombre,
+          apellido,
+          telefono: telefono || null
+        };
+
+        // Si ingresó una contraseña, la incluye
+        if (password) {
+          datosActualizar.password = password;
+        }
+
+        // Actualizar en Supabase
+        const { error } = await supabase
+          .from('usuarios')
+          .update(datosActualizar)
+          .eq('id', usuario.id);
+
+        if (error) throw error;
+
+        // Actualizar foto si se subió
+        const fotoPerfil = document.getElementById('fotoPerfil');
+        if (fotoPerfil.files && fotoPerfil.files[0]) {
+          const file = fotoPerfil.files[0];
+          const fileName = `${usuario.id}_${Date.now()}.${file.name.split('.').pop()}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('fotos-perfil')
+            .upload(fileName, file, { upsert: true });
+
+          if (uploadError) throw uploadError;
+
+          // Obtener URL pública
+          const { data: publicData } = supabase.storage
+            .from('fotos-perfil')
+            .getPublicUrl(fileName);
+
+          if (publicData && publicData.publicUrl) {
+            // Actualizar URL de foto en BD
+            await supabase
+              .from('usuarios')
+              .update({ foto_perfil: publicData.publicUrl })
+              .eq('id', usuario.id);
+
+            datosActualizar.foto_perfil = publicData.publicUrl;
+          }
+        }
+
+        // Actualizar localStorage
+        usuario.nombre = nombre;
+        usuario.apellido = apellido;
+        usuario.telefono = telefono;
+        if (datosActualizar.foto_perfil) {
+          usuario.foto_perfil = datosActualizar.foto_perfil;
+          document.getElementById('navUserAvatar').src = datosActualizar.foto_perfil;
+        }
+        localStorage.setItem('usuarioLogueado', JSON.stringify(usuario));
+
+        alert('✅ Perfil actualizado correctamente');
+        bootstrap.Modal.getInstance(document.getElementById('perfilModal')).hide();
+        cargarAvatarUsuario();
+
+      } catch (err) {
+        console.error('Error al guardar perfil:', err);
+        alert('Error al guardar cambios: ' + err.message);
       }
     };
 
@@ -247,20 +426,118 @@
     /* ========================================= */
     let carrito = [];
 
-    window.agregarAlCarrito = function(id, nombre, precio, imagen) {
+    window.agregarAlCarrito = function(id, nombre, precio, imagen, stock) {
       const itemExistente = carrito.find(item => item.id === id);
       if (itemExistente) {
+        if (itemExistente.cantidad >= stock) {
+          alert(`No hay más unidades disponibles de ${nombre}.`);
+          return;
+        }
         itemExistente.cantidad++;
       } else {
-        carrito.push({ id, nombre, precio, imagen, cantidad: 1 });
+        if (stock <= 0) {
+          alert(`El producto ${nombre} está agotado.`);
+          return;
+        }
+        carrito.push({ id, nombre, precio, imagen, stock, cantidad: 1 });
       }
       actualizarContadorCarrito();
-      alert(`¡${nombre} añadido al carrito! 🛍️`);
+      abrirCarrito();
     };
 
     function actualizarContadorCarrito() {
       const count = carrito.reduce((total, item) => total + item.cantidad, 0);
       document.getElementById("cartCount").innerText = count;
+    }
+
+    async function cargarProductos() {
+      const catalogo = document.getElementById("catalogoProductos");
+        console.log('[portalusuarios] cargarProductos called');
+        console.log('[portalusuarios] supabase client:', typeof supabase, supabase ? supabase : 'undefined');
+      if (!catalogo) return;
+
+      const placeholder = document.getElementById("catalogoPlaceholder");
+      if (placeholder) placeholder.style.display = "block";
+        try {
+          console.log('[portalusuarios] Iniciando consulta a productos...');
+          const query = supabase
+            .from('productos')
+            .select('id, nombre, descripcion, imagen, precio, stock')
+            .order('nombre', { ascending: true });
+          
+          console.log('[portalusuarios] Query object:', query);
+          
+          const { data: productos, error } = await query;
+          
+          console.log('[portalusuarios] Respuesta de Supabase - Error:', error);
+          console.log('[portalusuarios] Respuesta de Supabase - Data:', productos);
+
+          if (error) {
+            console.error('Error cargando productos:', error);
+            catalogo.innerHTML = `
+              <div class="col-12 text-center py-5 text-danger">
+                No se pudo cargar el catálogo. Revisa la consola para más detalles.
+              </div>
+            `;
+            alert('Error cargando productos: ' + (error.message || JSON.stringify(error)));
+            return;
+          }
+
+          if (!productos || productos.length === 0) {
+            catalogo.innerHTML = `
+              <div class="col-12 text-center py-5 text-muted">
+                No hay productos disponibles en este momento.
+              </div>
+            `;
+            console.warn('[portalusuarios] No hay productos disponibles o array vacío');
+            return;
+          }
+
+          console.log('[portalusuarios] Productos cargados exitosamente:', productos.length);
+          renderProductos(productos);
+          productosCargados = true;
+        } catch (err) {
+          console.error('Exception cargando productos:', err);
+          catalogo.innerHTML = `
+            <div class="col-12 text-center py-5 text-danger">
+              Ocurrió un error cargando los productos. Revisa la consola.
+            </div>
+          `;
+          alert('Error inesperado al cargar productos: ' + err.message);
+        }
+    }
+
+    function renderProductos(productos) {
+      const catalogo = document.getElementById("catalogoProductos");
+      if (!catalogo) return;
+
+      catalogo.innerHTML = productos.map(producto => {
+        const precioFormateado = producto.precio.toLocaleString('es-CO');
+        const stockText = producto.stock > 0 ? `Stock: ${producto.stock}` : 'Agotado';
+        const botonDisabled = producto.stock <= 0 ? 'disabled' : '';
+        const botonClase = producto.stock <= 0 ? 'btn-secondary' : 'btn-spa';
+        const lowStockBadge = producto.stock > 0 && producto.stock <= 3 ? `<span class="badge bg-warning text-dark">Stock bajo</span>` : '';
+
+        return `
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05) !important;">
+              <img src="${producto.imagen}" class="card-img-top" alt="${producto.nombre}" style="height: 200px; object-fit: cover;">
+              <div class="card-body p-4 text-start d-flex flex-column">
+                <h5 class="fw-bold mb-2 text-dark">${producto.nombre}</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">${producto.descripcion}</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="text-muted" style="font-size: 13px;">${stockText}</span>
+                  ${lowStockBadge}
+                  <span class="fw-bold fs-5 text-success">$${precioFormateado} COP</span>
+                </div>
+                <button class="btn ${botonClase} py-2 px-3 btn-sm mt-auto" onclick="agregarAlCarrito('${producto.id}', '${producto.nombre.replace(/'/g, "\\'")}', ${producto.precio}, '${producto.imagen}', ${producto.stock})" ${botonDisabled}>
+                  <i class="bi bi-plus-lg"></i> ${producto.stock > 0 ? 'Agregar' : 'Agotado'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     window.abrirCarrito = function() {
@@ -337,18 +614,200 @@
       renderCarrito();
     };
 
-    window.finalizarCompra = function() {
-      // Simular compra exitosa con una animación premium y limpia
-      bootstrap.Modal.getInstance(document.getElementById('carritoModal')).hide();
-      
-      alert("¡Procesando tu pago seguro Serenity Pay... 💳✨!");
-      
-      setTimeout(() => {
-        alert("¡Compra exitosa! 🎉\n\nHemos registrado tu pedido en Serenity Spa. Te enviaremos un correo de confirmación con los detalles del envío.");
-        carrito = [];
-        actualizarContadorCarrito();
-      }, 1500);
+    window.finalizarCompra = async function() {
+      // Validar datos de envío
+      const nombre = document.getElementById('envioNombre').value.trim();
+      const telefono = document.getElementById('envioTelefono').value.trim();
+      const direccion = document.getElementById('envioDireccion').value.trim();
+      const ciudad = document.getElementById('envioCiudad').value.trim();
+      const departamento = document.getElementById('envioDepartamento').value.trim();
+      const detalles = document.getElementById('envioDetalles').value.trim();
+
+      if (!nombre || !telefono || !direccion || !ciudad || !departamento) {
+        alert('Por favor completa todos los campos de envío requeridos');
+        return;
+      }
+
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío');
+        return;
+      }
+
+      // Calcular total
+      const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+      try {
+        // Guardar datos de envío en localStorage
+        const datosEnvio = { nombre, telefono, direccion, ciudad, departamento, detalles, fecha: new Date().toISOString() };
+        localStorage.setItem('datosEnvioActual', JSON.stringify(datosEnvio));
+
+        // Crear orden en Supabase ANTES de iniciar el pago
+        const ordenId = await crearOrdenEnSupabase({
+          usuario_id: usuarioLogueado.id,
+          usuario_email: usuarioLogueado.email,
+          items: carrito,
+          total: total,
+          envio: datosEnvio,
+          estado: 'pendiente'
+        });
+
+        console.log('[MercadoPago] Orden creada:', ordenId);
+
+        // Inicializar MercadoPago
+        const mp = new MercadoPago('APP_USR-REEMPLAZA-CON-TU-PUBLIC-KEY', {
+          locale: 'es-CO'
+        });
+
+        // Crear preferencia de pago
+        const items = carrito.map(item => ({
+          id: item.id,
+          title: item.nombre,
+          description: `Cantidad: ${item.cantidad}`,
+          unit_price: item.precio,
+          quantity: item.cantidad
+        }));
+
+        const preference = {
+          items: items,
+          payer: {
+            name: nombre,
+            email: usuarioLogueado.email,
+            phone: {
+              number: telefono
+            },
+            address: {
+              street_name: direccion,
+              city_name: ciudad
+            }
+          },
+          back_urls: {
+            success: window.location.origin + window.location.pathname + '?pago=exitoso&orden=' + ordenId,
+            failure: window.location.origin + window.location.pathname + '?pago=fallido&orden=' + ordenId,
+            pending: window.location.origin + window.location.pathname + '?pago=pendiente&orden=' + ordenId
+          },
+          statement_descriptor: 'Serenity Spa',
+          external_reference: ordenId,
+          metadata: {
+            orden_id: ordenId,
+            detalles_envio: JSON.stringify(datosEnvio)
+          }
+        };
+
+        // Crear preferencia en el backend (necesitarás un endpoint)
+        // Por ahora, usar la API de MercadoPago directamente
+        fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer APP_USR-REEMPLAZA-CON-TU-ACCESS-TOKEN'
+          },
+          body: JSON.stringify(preference)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.id) {
+            console.log('[MercadoPago] Preferencia creada:', data.id);
+            // Redirigir a checkout de MercadoPago
+            mp.checkout({
+              preference: {
+                id: data.id
+              }
+            });
+          } else {
+            throw new Error('No se pudo crear la preferencia de pago');
+          }
+        })
+        .catch(err => {
+          console.error('[MercadoPago] Error:', err);
+          alert('Error al procesar el pago: ' + err.message);
+        });
+
+      } catch (err) {
+        console.error('Error en finalizarCompra:', err);
+        alert('Error procesando tu compra: ' + err.message);
+      }
     };
+
+    async function crearOrdenEnSupabase(ordenData) {
+      const { data, error } = await supabase
+        .from('ordenes')
+        .insert([{
+          usuario_id: ordenData.usuario_id,
+          usuario_email: ordenData.usuario_email,
+          items: JSON.stringify(ordenData.items),
+          total: ordenData.total,
+          envio_nombre: ordenData.envio.nombre,
+          envio_telefono: ordenData.envio.telefono,
+          envio_direccion: ordenData.envio.direccion,
+          envio_ciudad: ordenData.envio.ciudad,
+          envio_departamento: ordenData.envio.departamento,
+          envio_detalles: ordenData.envio.detalles,
+          estado: ordenData.estado,
+          fecha_creacion: new Date().toISOString()
+        }])
+        .select('id')
+        .single();
+
+      if (error) {
+        throw new Error('Error creando orden: ' + error.message);
+      }
+
+      return data.id;
+    }
+
+    async function actualizarEstadoOrden(ordenId, estado, transactionId = null) {
+      const updateData = {
+        estado: estado,
+        fecha_actualizacion: new Date().toISOString()
+      };
+
+      if (transactionId) {
+        updateData.mercadopago_transaction_id = transactionId;
+      }
+
+      const { error } = await supabase
+        .from('ordenes')
+        .update(updateData)
+        .eq('id', ordenId);
+
+      if (error) {
+        console.error('Error actualizando orden:', error);
+        throw new Error(error.message);
+      }
+    }
+
+    async function actualizarStockDespuesCompra() {
+      if (carrito.length === 0) return;
+
+      const itemsPorProducto = carrito.reduce((acc, item) => {
+        acc[item.id] = (acc[item.id] || 0) + item.cantidad;
+        return acc;
+      }, {});
+
+      const updates = Object.entries(itemsPorProducto).map(async ([id, cantidad]) => {
+        const { data: producto, error: fetchError } = await supabase
+          .from('productos')
+          .select('stock')
+          .eq('id', id)
+          .single();
+
+        if (fetchError) {
+          throw new Error(fetchError.message);
+        }
+
+        const nuevoStock = Math.max(0, (producto.stock || 0) - cantidad);
+        const { error: updateError } = await supabase
+          .from('productos')
+          .update({ stock: nuevoStock })
+          .eq('id', id);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+      });
+
+      await Promise.all(updates);
+    }
 
     /* ========================================= */
     /* CARGAR RESERVAS */
@@ -644,3 +1103,296 @@
     /* ========================================= */
 
     cargarReservas()
+
+    /* ========================================= */
+    /* SERVICIOS - BASE DE DATOS */
+    /* ========================================= */
+
+    const serviciosDetallados = {
+      masajes: {
+        nombre: 'Masajes',
+        icon: 'bi-heart-pulse',
+        imagen: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Terapias relajantes y descontracturantes diseñadas para aliviar la tensión muscular, mejorar la circulación y promover el bienestar general. Cada sesión es personalizada según tus necesidades.',
+        servicios: [
+          'Masaje Sueco Completo',
+          'Masaje Descontracturante',
+          'Masaje Relajante',
+          'Drenaje Linfático',
+          'Reflexoterapia',
+          'Masaje con Piedras Calientes'
+        ],
+        duracion: '60 minutos',
+        precio: '$80.000 COP',
+        beneficios: [
+          '✨ Reduce estrés y ansiedad',
+          '💪 Alivia dolores musculares',
+          '❤️ Mejora la circulación',
+          '😴 Promueve el descanso profundo',
+          '🧘 Aumenta flexibilidad'
+        ]
+      },
+      faciales: {
+        nombre: 'Faciales',
+        icon: 'bi-face-smile',
+        imagen: 'https://images.unsplash.com/photo-1570172619644-dfd03cb4f6b6?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1570172619644-dfd03cb4f6b6?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Tratamientos rejuvenecedores que hidratan, limpian y revitalizan tu piel. Utilizamos productos premium para conseguir resultados visibles inmediatamente.',
+        servicios: [
+          'Limpieza Profunda',
+          'Tratamiento Hidratante',
+          'Facial Anti-Envejecimiento',
+          'Masaje Facial Lifting',
+          'Tratamiento Acné',
+          'Peeling Químico Suave'
+        ],
+        duracion: '50 minutos',
+        precio: '$90.000 COP',
+        beneficios: [
+          '✨ Piel más luminosa',
+          '💧 Máxima hidratación',
+          '🌟 Reduce arrugas y líneas',
+          '🎯 Cierra poros',
+          '👑 Aspecto juvenil'
+        ]
+      },
+      sauna: {
+        nombre: 'Sauna',
+        icon: 'bi-water',
+        imagen: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Purificación total del cuerpo mediante calor terapéutico. Elimina toxinas, mejora la circulación y proporciona relajación profunda.',
+        servicios: [
+          'Sauna Finlandesa',
+          'Sauna Infrarroja',
+          'Ritual Completo con Vapor',
+          'Exfoliación con Agua Fría',
+          'Desintoxicación',
+          'Terapia de Calor'
+        ],
+        duracion: '45 minutos',
+        precio: '$60.000 COP',
+        beneficios: [
+          '🔥 Elimina toxinas',
+          '💧 Hidrata la piel',
+          '😌 Relajación total',
+          '🧬 Detoxificación profunda',
+          '⚡ Energía renovada'
+        ]
+      },
+      pestanas: {
+        nombre: 'Pestañas',
+        icon: 'bi-eye',
+        imagen: 'https://images.unsplash.com/photo-1609592869014-34402be7d229?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1609592869014-34402be7d229?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1583001931096-959e9a1a6223?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1522337094846-8a818192de1f?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Extensiones de pestañas pelo a pelo, con resultados naturales y hermosos. Aplicación cuidadosa utilizando materiales premium de alta calidad.',
+        servicios: [
+          'Extensión Clásica',
+          'Extensión Volumen 3D',
+          'Extensión Volumen 5D',
+          'Rellenos de Mantenimiento',
+          'Lifting de Pestañas',
+          'Tinte de Pestañas'
+        ],
+        duracion: '120 minutos',
+        precio: '$120.000 COP',
+        beneficios: [
+          '👁️ Mirada más expresiva',
+          '✨ Efecto natural',
+          '💄 Durabilidad hasta 6 semanas',
+          '🎀 Mayor seguridad',
+          '💁 Bajo mantenimiento'
+        ]
+      },
+      exfoliacion: {
+        nombre: 'Exfoliación',
+        icon: 'bi-lightning-charge',
+        imagen: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Tratamiento que elimina células muertas y deja tu piel suave, radiante e hidratada. Resultados visibles desde la primera sesión.',
+        servicios: [
+          'Exfoliación Mecánica Suave',
+          'Exfoliación Química',
+          'Body Scrub Relajante',
+          'Exfoliación con Azúcar',
+          'Peeling Enzimático',
+          'Hidratación Post-Exfoliación'
+        ],
+        duracion: '40 minutos',
+        precio: '$70.000 COP',
+        beneficios: [
+          '✨ Piel suave y sedosa',
+          '💧 Máxima hidratación',
+          '🌟 Textura uniforme',
+          '🎯 Absorción de productos',
+          '👑 Brillo natural'
+        ]
+      },
+      fisioterapia: {
+        nombre: 'Fisioterapia',
+        icon: 'bi-bandaid',
+        imagen: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop',
+        imagenes: [
+          'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1579684389782-64d84b5e901a?q=80&w=800&auto=format&fit=crop'
+        ],
+        descripcion: 'Tratamientos especializados que mejoran la movilidad, reducen dolor y aceleran la recuperación. Técnicas modernas y terapeutas certificados.',
+        servicios: [
+          'Terapia Manual',
+          'Electroterapia',
+          'Movilización Articular',
+          'Estiramientos Terapéuticos',
+          'Fortalecimiento Muscular',
+          'Rehabilitación Postoperatoria'
+        ],
+        duracion: '60 minutos',
+        precio: '$85.000 COP',
+        beneficios: [
+          '💪 Mayor movilidad',
+          '😌 Reducción del dolor',
+          '🏃 Recuperación más rápida',
+          '🧬 Rehabilitación completa',
+          '⚡ Mejor funcionalidad'
+        ]
+      }
+    };
+
+
+    /* ========================================= */
+    /* FUNCIONES PARA MODAL DE SERVICIOS */
+    /* ========================================= */
+
+    window.abrirModalServicio = function(servicioKey) {
+      const servicio = serviciosDetallados[servicioKey];
+      
+      if (!servicio) {
+        console.error('Servicio no encontrado:', servicioKey);
+        return;
+      }
+
+      // Actualizar contenido del modal
+      const iconElement = document.getElementById('servicioIcon');
+      if (iconElement) {
+        iconElement.className = `bi ${servicio.icon} me-2`;
+      }
+      const nombreElement = document.getElementById('servicioNombre');
+      if (nombreElement) {
+        nombreElement.textContent = servicio.nombre;
+      }
+      
+      const mainImg = document.getElementById('servicioImagenPrincipal');
+      mainImg.src = servicio.imagen;
+      mainImg.style.opacity = 1;
+      
+      document.getElementById('servicioDescripcion').textContent = servicio.descripcion;
+      document.getElementById('servicioDuracion').textContent = servicio.duracion;
+      document.getElementById('servicioPrecio').textContent = servicio.precio;
+
+      // Generar miniaturas de imágenes de referencia
+      const thumbnailsContainer = document.getElementById('servicioThumbnails');
+      if (thumbnailsContainer) {
+        thumbnailsContainer.innerHTML = '';
+        if (servicio.imagenes && servicio.imagenes.length > 0) {
+          servicio.imagenes.forEach((imgUrl, index) => {
+            const thumbImg = document.createElement('img');
+            thumbImg.src = imgUrl;
+            thumbImg.className = `service-thumbnail${index === 0 ? ' active' : ''}`;
+            thumbImg.alt = `${servicio.nombre} referencia ${index + 1}`;
+            
+            thumbImg.onclick = function() {
+              // Desactivar todos los thumbnails
+              thumbnailsContainer.querySelectorAll('.service-thumbnail').forEach(t => t.classList.remove('active'));
+              // Activar este thumbnail
+              thumbImg.classList.add('active');
+              // Cambiar imagen principal con una suave animación de opacidad
+              mainImg.style.opacity = 0;
+              setTimeout(() => {
+                mainImg.src = imgUrl;
+                mainImg.style.opacity = 1;
+              }, 200);
+            };
+            
+            thumbnailsContainer.appendChild(thumbImg);
+          });
+        }
+      }
+
+      // Agregar servicios específicos
+      const itemsList = document.getElementById('servicioItems');
+      itemsList.innerHTML = '';
+      servicio.servicios.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div style="padding: 8px; background: rgba(79, 143, 123, 0.1); border-radius: 8px; font-size: 0.9rem; color: #333;">✓ ${item}</div>`;
+        itemsList.appendChild(li);
+      });
+
+      // Agregar beneficios
+      const beneficios = document.getElementById('servicioBeneficios');
+      beneficios.innerHTML = '';
+      servicio.beneficios.forEach(benefit => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div style="padding: 10px 0; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); color: #333;">${benefit}</div>`;
+        beneficios.appendChild(li);
+      });
+
+      // Guardar el servicio en localStorage para usarlo en reservas
+      localStorage.setItem('servicioSeleccionado', JSON.stringify({
+        key: servicioKey,
+        nombre: servicio.nombre
+      }));
+
+      // Abrir el modal
+      const modal = new bootstrap.Modal(document.getElementById('servicioModal'));
+      modal.show();
+    };
+
+    window.irAReserva = function() {
+      // Cerrar el modal de servicios
+      const modal = bootstrap.Modal.getInstance(document.getElementById('servicioModal'));
+      if (modal) {
+        modal.hide();
+      }
+
+      // Obtener el servicio seleccionado
+      const servicioSeleccionado = JSON.parse(localStorage.getItem('servicioSeleccionado'));
+      
+      // Cambiar a la pestaña de reservas
+      switchUserTab('reservas');
+
+      // Preseleccionar el servicio en el formulario
+      if (servicioSeleccionado) {
+        const selectServicio = document.getElementById('servicio');
+        if (selectServicio) {
+          // Buscar la opción que coincida
+          for (let i = 0; i < selectServicio.options.length; i++) {
+            const option = selectServicio.options[i].text.toLowerCase();
+            if (option.includes(servicioSeleccionado.nombre.toLowerCase())) {
+              selectServicio.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
+    };
