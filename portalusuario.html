@@ -158,14 +158,44 @@
             </div>
 </section>
 
-<!-- Galería -->
-<section id="galeria" class="container py-5">
-  <h2 class="text-center section-title">Galería</h2>
 
-  <div class="row gallery g-3">
-    <div class="col-md-4"><img src="img/foto_galeria_1.jpg"></div>
-    <div class="col-md-4"><img src="img/foto_galeria_2.jpg"></div>
-    <div class="col-md-4"><img src="img/foto_galeria_3.jpg"></div>
+<!-- Sección de Reseñas -->
+<section id="seccionResenas" class="container py-5">
+  <h2 class="text-center section-title">Reseñas de Clientes</h2>
+
+  <!-- Contenedor de reseñas -->
+  <div class="row g-4" id="listaResenas">
+    <div class="col-12 text-center py-4 text-muted" id="placeholderResenas">
+      <i class="bi bi-chat-left-text" style="font-size: 3rem; opacity: 0.5;"></i>
+      <p class="mt-3">Aún no hay reseñas. ¡Sé el primero en compartir tu experiencia!</p>
+    </div>
+  </div>
+
+  <!-- Formulario para dejar reseña -->
+  <div class="glass-card mt-5 p-4" style="border-radius: 20px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.4);">
+    <h3 class="fw-bold mb-4" style="color: #4f8f7b; font-size: 22px;">
+      <i class="bi bi-pencil-square me-2"></i>Dejar una Reseña
+    </h3>
+    <form id="formResena" onsubmit="event.preventDefault(); publicarResena();">
+      <div class="mb-3">
+        <label class="form-label fw-semibold text-dark">Tu Calificación</label>
+        <div class="rating-stars-input d-flex gap-2" id="ratingStars" style="font-size: 32px; color: #ccc; cursor: pointer;">
+          <i class="bi bi-star" data-value="1"></i>
+          <i class="bi bi-star" data-value="2"></i>
+          <i class="bi bi-star" data-value="3"></i>
+          <i class="bi bi-star" data-value="4"></i>
+          <i class="bi bi-star" data-value="5"></i>
+        </div>
+        <input type="hidden" id="calificacionResena" value="0">
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold text-dark" for="comentarioResena">Tu Comentario</label>
+        <textarea id="comentarioResena" class="form-control rounded-3" rows="3" placeholder="Comparte tu experiencia en Serenity Spa..." style="border: 1px solid rgba(79, 143, 123, 0.3);" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-spa px-5 py-2 fw-bold" style="border-radius: 12px;">
+        <i class="bi bi-send-fill me-2"></i>Publicar Reseña
+      </button>
+    </form>
   </div>
 </section>
             

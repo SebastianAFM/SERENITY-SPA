@@ -1099,10 +1099,205 @@
     }
 
     /* ========================================= */
+    /* LÓGICA DE RESEÑAS */
+    /* ========================================= */
+
+    window.cargarResenas = async function () {
+      try {
+        const { data, error } = await supabase
+          .from('resenas')
+          .select('*, usuarios(nombre, apellido, foto_perfil)')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error al cargar reseñas:', error);
+          return;
+        }
+
+        renderResenas(data);
+      } catch (err) {
+        console.error('Error en cargarResenas:', err);
+      }
+    };
+
+    function renderResenas(resenas) {
+      const container = document.getElementById('listaResenas');
+      if (!container) return;
+
+      if (!resenas || resenas.length === 0) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-4 text-muted" id="placeholderResenas">
+            <i class="bi bi-chat-left-text" style="font-size: 3rem; opacity: 0.5;"></i>
+            <p class="mt-3">Aún no hay reseñas. ¡Sé el primero en compartir tu experiencia!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      resenas.forEach(resena => {
+        const usuario = resena.usuarios || {};
+        const nombreCompleto = `${usuario.nombre || 'Usuario'} ${usuario.apellido || ''}`.trim();
+        const fotoPerfil = usuario.foto_perfil || 'img/default-avatar.svg';
+        
+        // Formatear calificación a estrellas
+        let estrellasHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          if (i <= resena.calificacion) {
+            estrellasHtml += '<i class="bi bi-star-fill me-1"></i>';
+          } else {
+            estrellasHtml += '<i class="bi bi-star me-1"></i>';
+          }
+        }
+
+        // Formatear fecha
+        let fechaFormateada = 'Reciente';
+        if (resena.created_at) {
+          const d = new Date(resena.created_at);
+          fechaFormateada = d.toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        }
+
+        const reviewCol = document.createElement('div');
+        reviewCol.className = 'col-md-6 col-lg-4';
+        reviewCol.innerHTML = `
+          <div class="review-card">
+            <div class="d-flex align-items-center mb-3">
+              <img src="${fotoPerfil}" alt="${nombreCompleto}" class="review-avatar me-3">
+              <div>
+                <h5 class="fw-bold mb-1 text-dark" style="font-size: 16px;">${nombreCompleto}</h5>
+                <small class="text-muted" style="font-size: 12px;">${fechaFormateada}</small>
+              </div>
+            </div>
+            <div class="stars-container mb-2">
+              ${estrellasHtml}
+            </div>
+            <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.5; font-style: italic;">
+              "${resena.comentario}"
+            </p>
+          </div>
+        `;
+        container.appendChild(reviewCol);
+      });
+    }
+
+    window.publicarResena = async function () {
+      if (!usuarioLogueado) {
+        alert("Debes iniciar sesión para publicar una reseña.");
+        return;
+      }
+
+      const calificacion = parseInt(document.getElementById("calificacionResena").value);
+      const comentario = document.getElementById("comentarioResena").value.trim();
+
+      if (calificacion === 0) {
+        alert("Por favor selecciona una calificación de 1 a 5 estrellas.");
+        return;
+      }
+
+      if (!comentario) {
+        alert("Por favor escribe un comentario.");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('resenas')
+          .insert([{
+            usuario_id: usuarioLogueado.id,
+            calificacion: calificacion,
+            comentario: comentario
+          }]);
+
+        if (error) {
+          throw error;
+        }
+
+        alert("¡Muchas gracias por tu reseña!");
+        
+        // Resetear formulario
+        document.getElementById("comentarioResena").value = "";
+        document.getElementById("calificacionResena").value = "0";
+        
+        // Deseleccionar estrellas
+        document.querySelectorAll("#ratingStars i").forEach(star => {
+          star.classList.remove("active", "bi-star-fill");
+          star.classList.add("bi-star");
+        });
+
+        // Recargar reseñas
+        cargarResenas();
+      } catch (err) {
+        console.error("Error al publicar reseña:", err);
+        alert("Hubo un error al guardar tu reseña: " + err.message);
+      }
+    };
+
+    function initRatingStars() {
+      const container = document.getElementById("ratingStars");
+      if (!container) return;
+
+      const stars = container.querySelectorAll("i");
+      const hiddenInput = document.getElementById("calificacionResena");
+
+      stars.forEach(star => {
+        // Al hacer click, establecer la calificación
+        star.addEventListener("click", () => {
+          const value = parseInt(star.getAttribute("data-value"));
+          hiddenInput.value = value;
+          updateStarsVisual(value);
+        });
+
+        // Al pasar el ratón por encima, iluminar temporalmente hasta esa estrella
+        star.addEventListener("mouseover", () => {
+          const value = parseInt(star.getAttribute("data-value"));
+          highlightStars(value);
+        });
+      });
+
+      // Al sacar el ratón del contenedor de estrellas, restaurar la calificación seleccionada
+      container.addEventListener("mouseleave", () => {
+        const selectedValue = parseInt(hiddenInput.value) || 0;
+        updateStarsVisual(selectedValue);
+      });
+
+      function highlightStars(value) {
+        stars.forEach(star => {
+          const starVal = parseInt(star.getAttribute("data-value"));
+          if (starVal <= value) {
+            star.classList.remove("bi-star");
+            star.classList.add("bi-star-fill", "active");
+          } else {
+            star.classList.remove("bi-star-fill", "active");
+            star.classList.add("bi-star");
+          }
+        });
+      }
+
+      function updateStarsVisual(value) {
+        stars.forEach(star => {
+          const starVal = parseInt(star.getAttribute("data-value"));
+          if (starVal <= value) {
+            star.classList.remove("bi-star");
+            star.classList.add("bi-star-fill", "active");
+          } else {
+            star.classList.remove("bi-star-fill", "active");
+            star.classList.add("bi-star");
+          }
+        });
+      }
+    }
+
+    /* ========================================= */
     /* INIT */
     /* ========================================= */
 
     cargarReservas()
+    initRatingStars()
+    cargarResenas()
 
     /* ========================================= */
     /* SERVICIOS - BASE DE DATOS */

@@ -261,3 +261,46 @@ body {
       transform: scale(1.05);
     }
 
+    /* RESEÑAS */
+    .review-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 25px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+    }
+
+    .review-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(79, 143, 123, 0.12);
+    }
+
+    .review-avatar {
+      width: 55px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #4f8f7b;
+    }
+
+    .stars-container {
+      color: #ffc107;
+      font-size: 1.15rem;
+    }
+
+    /* Input de estrellas en formulario */
+    .rating-stars-input i {
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .rating-stars-input i:hover {
+      transform: scale(1.2);
+    }
+
+    .rating-stars-input i.active {
+      color: #ffc107 !important;
+    }
+
+
