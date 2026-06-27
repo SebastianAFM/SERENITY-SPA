@@ -654,7 +654,7 @@
         console.log('[MercadoPago] Orden creada:', ordenId);
 
         // Inicializar MercadoPago
-        const mp = new MercadoPago('APP_USR-REEMPLAZA-CON-TU-PUBLIC-KEY', {
+        const mp = new MercadoPago('APP_USR-6cadb193-bf87-461d-a01c-c88efc79b734', {
           locale: 'es-CO'
         });
 
@@ -699,7 +699,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer APP_USR-REEMPLAZA-CON-TU-ACCESS-TOKEN'
+            'Authorization': 'Bearer APP_USR-8745076641540038-062717-3f6ba78eb1e534c1f60421aad4001372-3503303196'
           },
           body: JSON.stringify(preference)
         })
@@ -982,6 +982,18 @@
 
       alert("Reserva creada exitosamente")
 
+      // Enviar correo de nueva cita
+      if (window.emailService) {
+        window.emailService.enviarNuevaCita(
+          nombre,
+          usuarioLogueado.correo,
+          servicio,
+          trabajador,
+          fecha,
+          hora
+        );
+      }
+
       limpiarFormulario()
 
       cargarReservas()
@@ -998,22 +1010,46 @@
 
       if (!confirmar) return
 
-      const { error } = await supabase
-        .from('reservas')
-        .delete()
-        .eq('id', id)
+      try {
+        // Obtener detalles de la reserva antes de borrar
+        const { data: reserva, error: fetchError } = await supabase
+          .from('reservas')
+          .select('*')
+          .eq('id', id)
+          .single();
 
-      if (error) {
+        const { error } = await supabase
+          .from('reservas')
+          .delete()
+          .eq('id', id)
 
-        console.log(error)
+        if (error) {
+          console.log(error)
+          alert("Error al cancelar la reserva")
+          return
+        }
 
-        alert("Error")
-        return
+        alert("Reserva cancelada")
+
+        // Enviar correo de cancelación
+        if (reserva && window.emailService) {
+          const nombreCompleto = usuarioLogueado.nombre + " " + usuarioLogueado.apellido;
+          window.emailService.enviarActualizacionCita(
+            nombreCompleto,
+            usuarioLogueado.correo,
+            reserva.servicio,
+            reserva.trabajador,
+            reserva.fecha,
+            reserva.hora,
+            'Cancelada',
+            'cancelada'
+          );
+        }
+
+        cargarReservas()
+      } catch (err) {
+        console.error("Error en cancelarReserva:", err);
       }
-
-      alert("Reserva cancelada")
-
-      cargarReservas()
     }
 
     /* ========================================= */
@@ -1044,7 +1080,7 @@
 
       const { data: reserva, error: fetchError } = await supabase
         .from('reservas')
-        .select('trabajador')
+        .select('trabajador, servicio')
         .eq('id', id)
         .single()
 
@@ -1083,6 +1119,21 @@
       }
 
       alert("Reserva actualizada")
+
+      // Enviar correo de reagendamiento
+      if (reserva && window.emailService) {
+        const nombreCompleto = usuarioLogueado.nombre + " " + usuarioLogueado.apellido;
+        window.emailService.enviarActualizacionCita(
+          nombreCompleto,
+          usuarioLogueado.correo,
+          reserva.servicio,
+          reserva.trabajador,
+          nuevaFecha,
+          nuevaHora,
+          'Confirmada',
+          'reagendada'
+        );
+      }
 
       cargarReservas()
     }

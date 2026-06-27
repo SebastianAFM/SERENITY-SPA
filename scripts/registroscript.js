@@ -119,6 +119,12 @@ async function registrarUsuario(correo, password, nombre, apellido) {
         } else {
             successMessage.style.display = "block";
             console.log("Usuario registrado con éxito");
+            
+            // Enviar correo de bienvenida
+            if (window.emailService) {
+                window.emailService.enviarBienvenida(`${nombre} ${apellido}`, correo);
+            }
+
             // Limpiar formulario
             form.reset();
             // Redirigir al inicio de sesión tras 2 segundos
