@@ -30,7 +30,7 @@
     SERVICE_ID: 'service_8zbv0ld',
     TEMPLATES: {
       BIENVENIDA: 'template_iiy1fmi',
-      NUEVA_CITA: 'TU_TEMPLATE_ID_NUEVA_CITA',
+      NUEVA_CITA: 'template_z9e8cpa',
       ACTUALIZACION_CITA: 'TU_TEMPLATE_ID_ACTUALIZACION'
     }
   };

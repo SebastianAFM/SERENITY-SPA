@@ -143,6 +143,18 @@ window.actualizarEstadoCita = async function (id, nuevoEstado) {
   if (!result.isConfirmed) return;
 
   try {
+    // 1. Obtener detalles de la reserva antes de actualizar para enviar el correo
+    const { data: reserva, error: fetchError } = await supabase
+      .from('reservas')
+      .select('*, usuarios(correo)')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.warn("No se pudo obtener la reserva para notificación:", fetchError.message);
+    }
+
+    // 2. Actualizar el estado en la base de datos
     const { error } = await supabase
       .from('reservas')
       .update({ estado: nuevoEstado })
@@ -155,6 +167,21 @@ window.actualizarEstadoCita = async function (id, nuevoEstado) {
     }
 
     alert(`Sesión marcada como ${nuevoEstado} exitosamente. ✨`);
+
+    // 3. Enviar notificación por correo si todo fue exitoso
+    if (reserva && reserva.usuarios && reserva.usuarios.correo && window.emailService) {
+      window.emailService.enviarActualizacionCita(
+        reserva.nombre,
+        reserva.usuarios.correo,
+        reserva.servicio,
+        reserva.trabajador,
+        reserva.fecha,
+        reserva.hora,
+        nuevoEstado,
+        'estado'
+      );
+    }
+
     cargarAgenda();
 
   } catch (err) {

@@ -665,6 +665,32 @@ window.guardarEdicionReserva = async function() {
     if (error) throw error;
 
     alert("La cita ha sido actualizada exitosamente.");
+
+    // Enviar notificación de actualización si hay cambio
+    const reservaModificada = reservaOriginal || {};
+    let correoUsuario = null;
+    if (reservaModificada.usuario_id) {
+      const userObj = usersData.find(u => u.id == reservaModificada.usuario_id);
+      if (userObj) correoUsuario = userObj.correo;
+    }
+
+    if (correoUsuario && window.emailService) {
+      let tipo = 'estado';
+      if (cambioFecha) tipo = 'reagendada';
+      else if (estado === 'Cancelada') tipo = 'cancelada';
+      
+      window.emailService.enviarActualizacionCita(
+        reservaModificada.nombre || nombre,
+        correoUsuario,
+        servicio,
+        trabajador,
+        fecha,
+        hora,
+        estado,
+        tipo
+      );
+    }
+
     bootstrap.Modal.getInstance(document.getElementById('modalEditarReserva')).hide();
     await inicializarDashboard();
 
@@ -689,6 +715,15 @@ window.eliminarReserva = async function(id) {
   });
   if (result.isConfirmed) {
     try {
+      // Enviar correo de cancelación si tiene usuario
+      // Primero debemos encontrar la reserva antes de borrarla
+      const reserva = bookingsData.find(b => String(b.id) === String(id));
+      let correoUsuario = null;
+      if (reserva && reserva.usuario_id) {
+        const userObj = usersData.find(u => u.id == reserva.usuario_id);
+        if (userObj) correoUsuario = userObj.correo;
+      }
+
       const { error } = await supabase
         .from('reservas')
         .delete()
@@ -697,6 +732,20 @@ window.eliminarReserva = async function(id) {
       if (error) throw error;
 
       alert("Reserva eliminada con éxito.");
+
+      if (reserva && correoUsuario && window.emailService) {
+        window.emailService.enviarActualizacionCita(
+          reserva.nombre,
+          correoUsuario,
+          reserva.servicio,
+          reserva.trabajador,
+          reserva.fecha,
+          reserva.hora,
+          'Cancelada',
+          'cancelada'
+        );
+      }
+
       await inicializarDashboard();
 
     } catch (err) {
@@ -790,6 +839,24 @@ window.guardarNuevaReservaAdmin = async function() {
     if (error) throw error;
 
     alert("Nueva cita creada exitosamente.");
+
+    // Enviar correo si es un usuario registrado
+    let correoUsuario = null;
+    if (usuarioId) {
+      const userObj = usersData.find(u => u.id == usuarioId);
+      if (userObj) correoUsuario = userObj.correo;
+    }
+
+    if (correoUsuario && window.emailService) {
+      window.emailService.enviarNuevaCita(
+        nombre,
+        correoUsuario,
+        servicio,
+        trabajador,
+        fecha,
+        hora
+      );
+    }
     
     // Limpiar y ocultar modal
     document.getElementById("modal-crear-usuario-id").value = "";
