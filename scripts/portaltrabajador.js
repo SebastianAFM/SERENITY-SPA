@@ -37,11 +37,11 @@ async function cargarAgenda() {
   const nombreTrabajador = `${usuarioLogueado.nombre} ${usuarioLogueado.apellido}`;
 
   try {
-    // Buscar citas donde el trabajador sea este profesional o esté asignado a "Cualquiera"
+    // Buscar citas donde el trabajador sea este profesional específicamente
     const { data, error } = await supabase
       .from('reservas')
       .select('*')
-      .or(`trabajador.eq."${nombreTrabajador}",trabajador.eq.Cualquiera`)
+      .eq('trabajador', nombreTrabajador)
       .order('fecha', { ascending: true });
 
     if (error) {
@@ -129,8 +129,18 @@ function renderAgenda(citas) {
 /* ACTUALIZAR ESTADO DE CITA */
 /* ========================================= */
 window.actualizarEstadoCita = async function (id, nuevoEstado) {
-  const confirmacion = confirm(`¿Estás seguro de marcar esta sesión como "${nuevoEstado}"?`);
-  if (!confirmacion) return;
+  const result = await Swal.fire({
+    title: "Actualizar Sesión",
+    text: `¿Estás seguro de marcar esta sesión como "${nuevoEstado}"?`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#198754",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, actualizar",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'glass-modal' }
+  });
+  if (!result.isConfirmed) return;
 
   try {
     const { error } = await supabase
@@ -155,8 +165,19 @@ window.actualizarEstadoCita = async function (id, nuevoEstado) {
 /* ========================================= */
 /* CERRAR SESIÓN */
 /* ========================================= */
-window.logoutTrabajador = function () {
-  if (confirm("¿Seguro que deseas salir del portal de colaboradores?")) {
+window.logoutTrabajador = async function () {
+  const result = await Swal.fire({
+    title: "Cerrar Sesión",
+    text: "¿Seguro que deseas salir del portal de colaboradores?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Salir",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'glass-modal' }
+  });
+  if (result.isConfirmed) {
     localStorage.removeItem('usuarioLogueado');
     window.location.href = "login.html";
   }

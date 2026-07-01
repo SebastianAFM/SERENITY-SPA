@@ -102,8 +102,15 @@
         <!-- Tarjeta Ingresos -->
         <div class="metric-card blue">
           <div class="metric-details">
-            <h6>Ganancias Est.</h6>
-            <h3 id="stat-ganancias">$0</h3>
+            <h6 class="m-0 mb-1">Ganancias Totales</h6>
+            <h3 id="stat-ganancias" class="mb-2">$0</h3>
+            <select id="filtro-tiempo-ganancias" class="form-select form-select-sm shadow-none p-1" style="background-color: rgba(255,255,255,0.2); border: none; color: white; cursor: pointer; width: auto; font-size: 0.8rem;" onchange="renderMetrics()">
+              <option value="siempre" style="color: black;">Todo el tiempo</option>
+              <option value="dia" style="color: black;">Hoy</option>
+              <option value="semana" style="color: black;">Esta semana</option>
+              <option value="mes" style="color: black;">Este mes</option>
+              <option value="año" style="color: black;">Este año</option>
+            </select>
           </div>
           <div class="metric-icon">
             <i class="bi bi-currency-dollar"></i>
@@ -481,5 +488,9 @@
 <!-- Admin Script -->
 <script src="scripts/adminscript.js"></script>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Override Alertas -->
+<script src="scripts/alerts.js"></script>
 </body>
 </html>

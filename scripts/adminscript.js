@@ -182,14 +182,42 @@ function renderMetrics() {
   // Total Reservas
   document.getElementById("stat-total-reservas").innerText = bookingsData.length;
 
-  // Ganancias Estimadas (Citas que NO están canceladas)
+  // Filtro de Ganancias
+  const filtroTiempo = document.getElementById("filtro-tiempo-ganancias") ? document.getElementById("filtro-tiempo-ganancias").value : "siempre";
+  const hoy = new Date();
+
+  // Ganancias Totales (Solo Citas Completadas)
   let ganancias = 0;
   bookingsData.forEach(b => {
-    if (b.estado !== 'Cancelada') {
-      const precio = PRECIOS_SERVICIOS[b.servicio] || 50000;
-      ganancias += precio;
+    if (b.estado === 'Completada') {
+      const fechaReserva = new Date(b.fecha + 'T00:00:00');
+      let incluir = false;
+
+      if (filtroTiempo === 'siempre') {
+        incluir = true;
+      } else if (filtroTiempo === 'dia') {
+        incluir = fechaReserva.toDateString() === hoy.toDateString();
+      } else if (filtroTiempo === 'semana') {
+        const inicioSemana = new Date(hoy);
+        inicioSemana.setDate(hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1)); // Lunes como inicio
+        inicioSemana.setHours(0,0,0,0);
+        const finSemana = new Date(inicioSemana);
+        finSemana.setDate(inicioSemana.getDate() + 6);
+        finSemana.setHours(23,59,59,999);
+        incluir = fechaReserva >= inicioSemana && fechaReserva <= finSemana;
+      } else if (filtroTiempo === 'mes') {
+        incluir = fechaReserva.getMonth() === hoy.getMonth() && fechaReserva.getFullYear() === hoy.getFullYear();
+      } else if (filtroTiempo === 'año') {
+        incluir = fechaReserva.getFullYear() === hoy.getFullYear();
+      }
+
+      if (incluir) {
+        const precio = PRECIOS_SERVICIOS[b.servicio] || 50000;
+        ganancias += precio;
+      }
     }
   });
+
   // Formatear a moneda COP/Local
   document.getElementById("stat-ganancias").innerText = new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -489,7 +517,18 @@ window.guardarRolUsuario = async function() {
 
 // Eliminar Usuario
 window.eliminarUsuario = async function(id, nombre) {
-  if (confirm(`¿Estás completamente seguro de que deseas eliminar permanentemente la cuenta de ${nombre}? Se eliminarán todas sus reservas asociadas.`)) {
+  const result = await Swal.fire({
+    title: "Eliminar Usuario",
+    text: `¿Estás completamente seguro de que deseas eliminar permanentemente la cuenta de ${nombre}? Se eliminarán todas sus reservas asociadas.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'glass-modal' }
+  });
+  if (result.isConfirmed) {
     try {
       // 1. Eliminar reservas vinculadas primero
       const { error: errReservas } = await supabase
@@ -570,13 +609,23 @@ window.filtrarReservas = function() {
   renderTablaReservas(filtradas);
 }
 
-// Abrir Modal Editar Reserva
 window.abrirModalEditarReserva = function(id, cliente, servicio, fecha, hora, estado, trabajador) {
   document.getElementById("modal-reserva-id").value = id;
   document.getElementById("modal-reserva-cliente").value = cliente;
   document.getElementById("modal-reserva-servicio").value = servicio;
   document.getElementById("modal-reserva-trabajador").value = trabajador || 'Cualquiera';
-  document.getElementById("modal-reserva-fecha").value = fecha;
+  
+  const fechaInput = document.getElementById("modal-reserva-fecha");
+  fechaInput.value = fecha;
+  
+  // Quitar la restricción 'min' si la fecha de la reserva ya está en el pasado para permitir guardar cambios (ej. estado)
+  const hoy = new Date().toISOString().split('T')[0];
+  if (fecha < hoy) {
+    fechaInput.removeAttribute('min');
+  } else {
+    fechaInput.min = hoy;
+  }
+
   document.getElementById("modal-reserva-hora").value = hora;
   document.getElementById("modal-reserva-estado").value = estado;
 
@@ -593,8 +642,11 @@ window.guardarEdicionReserva = async function() {
   const hora = document.getElementById("modal-reserva-hora").value;
   const estado = document.getElementById("modal-reserva-estado").value;
 
-  if (!esFechaValidaReserva(fecha)) {
-    alert("No se pueden reservar fechas anteriores al día de hoy.");
+  const reservaOriginal = bookingsData.find(b => String(b.id) === String(id));
+  const cambioFecha = reservaOriginal ? reservaOriginal.fecha !== fecha : true;
+
+  if (cambioFecha && !esFechaValidaReserva(fecha)) {
+    alert("No se pueden reagendar citas a fechas anteriores al día de hoy.");
     return;
   }
 
@@ -624,7 +676,18 @@ window.guardarEdicionReserva = async function() {
 
 // Eliminar Reserva
 window.eliminarReserva = async function(id) {
-  if (confirm("¿Estás seguro de que deseas eliminar permanentemente esta reserva?")) {
+  const result = await Swal.fire({
+    title: "Eliminar Reserva",
+    text: "¿Estás seguro de que deseas eliminar permanentemente esta reserva?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'glass-modal' }
+  });
+  if (result.isConfirmed) {
     try {
       const { error } = await supabase
         .from('reservas')
@@ -830,8 +893,19 @@ function renderChartServicios() {
 // ==========================================
 // 7. CERRAR SESIÓN
 // ==========================================
-window.logoutAdmin = function() {
-  if (confirm("¿Seguro que deseas salir del panel de administración?")) {
+window.logoutAdmin = async function() {
+  const result = await Swal.fire({
+    title: "Cerrar Sesión",
+    text: "¿Seguro que deseas salir del panel de administración?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Salir",
+    cancelButtonText: "Cancelar",
+    customClass: { popup: 'glass-modal' }
+  });
+  if (result.isConfirmed) {
     localStorage.removeItem('usuarioLogueado');
     window.location.href = "login.html";
   }

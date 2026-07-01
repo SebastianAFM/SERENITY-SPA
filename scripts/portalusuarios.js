@@ -232,8 +232,19 @@
     /* ========================================= */
     /* LOGOUT Y NAVEGACIÓN DE PESTAÑAS */
     /* ========================================= */
-    window.logoutUsuario = function() {
-      if (confirm("¿Seguro que deseas cerrar sesión?")) {
+    window.logoutUsuario = async function() {
+      const result = await Swal.fire({
+        title: "Cerrar Sesión",
+        text: "¿Seguro que deseas cerrar sesión?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Salir",
+        cancelButtonText: "Cancelar",
+        customClass: { popup: 'glass-modal' }
+      });
+      if (result.isConfirmed) {
         localStorage.removeItem('usuarioLogueado');
         window.location.href = "login.html";
       }
@@ -638,13 +649,13 @@
 
       try {
         // Guardar datos de envío en localStorage
-        const datosEnvio = { nombre, telefono, direccion, ciudad, departamento, detalles, fecha: new Date().toISOString() };
+        const datosEnvio = { nombre, telefono, correo: usuarioLogueado.correo, direccion, ciudad, departamento, detalles, fecha: new Date().toISOString() };
         localStorage.setItem('datosEnvioActual', JSON.stringify(datosEnvio));
 
         // Crear orden en Supabase ANTES de iniciar el pago
         const ordenId = await crearOrdenEnSupabase({
           usuario_id: usuarioLogueado.id,
-          usuario_email: usuarioLogueado.email,
+          usuario_email: usuarioLogueado.correo,
           items: carrito,
           total: total,
           envio: datosEnvio,
@@ -671,7 +682,7 @@
           items: items,
           payer: {
             name: nombre,
-            email: usuarioLogueado.email,
+            email: usuarioLogueado.correo,
             phone: {
               number: telefono
             },
@@ -706,13 +717,12 @@
         .then(response => response.json())
         .then(data => {
           if (data.id) {
-            console.log('[MercadoPago] Preferencia creada:', data.id);
-            // Redirigir a checkout de MercadoPago
-            mp.checkout({
-              preference: {
-                id: data.id
-              }
-            });
+            // Redirigir a checkout de MercadoPago (usando init_point para redirección directa)
+            if (data.init_point) {
+              window.location.href = data.init_point;
+            } else {
+              throw new Error('La respuesta de MercadoPago no incluyó un enlace de pago válido.');
+            }
           } else {
             throw new Error('No se pudo crear la preferencia de pago');
           }
@@ -1005,10 +1015,19 @@
 
     window.cancelarReserva = async function (id) {
 
-      const confirmar =
-        confirm("¿Cancelar reserva?")
+      const result = await Swal.fire({
+        title: "Cancelar Reserva",
+        text: "¿Estás seguro de cancelar esta reserva?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "Atrás",
+        customClass: { popup: 'glass-modal' }
+      });
 
-      if (!confirmar) return
+      if (!result.isConfirmed) return
 
       try {
         // Obtener detalles de la reserva antes de borrar
